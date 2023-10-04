@@ -1,0 +1,10 @@
+word = -1
+loop: while True:
+    if (kbd != 0) toggleScreen()
+
+toggleScreen() {
+    temp = screen[0]
+    for col in screen: screen[col] = word
+    word = temp
+    goto loop
+}

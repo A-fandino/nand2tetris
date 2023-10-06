@@ -39,5 +39,37 @@ CHIP CPU {
         pc[15];          // address of next instruction
 
     PARTS:
-    // Put your code here:
+    And(a=instruction[3], b=instruction[15], out=writeM);
+
+    //Decide wether or not write into A
+    Not(in=instruction[15], out=isAinstr);
+    And(a=instruction[15], b=instruction[5], out=cWritesA);
+    Or(a=isAinstr, b=cWritesA, out=loadA);
+
+    Mux16(a=instruction, b=aluOut, sel=cWritesA, out=aval);
+    ARegister(in=aval, load=loadA, out=Aout, out[0..14]=addressM);
+    Mux16(a=Aout, b=inM, sel=instruction[12], out=aOrM);
+    ALU(x=Dout, y=aOrM, zx=instruction[11], nx=instruction[10], zy=instruction[9], ny=instruction[8], f=instruction[7], no=instruction[6], out=aluOut, out=outM, zr=zr, ng=ng);
+    DRegister(in=aluOut, load=instruction[4], out=Dout);
+    
+    // JUMP
+    Or(a=ng, b=zr, out=nonPstv);
+    Not(in=nonPstv, out=postv);
+    And(a=instruction[0], b=postv, out=gtZero);
+    And(a=instruction[1], b=zr, out=eqZero);
+    And(a=instruction[2], b=ng, out=ltrZero);
+    Or(a=gtZero, b=eqZero, out=pcLoad1);
+    Or(a=pcLoad1, b=ltrZero, out=pcLoad2);
+    And(a=instruction[15], b=pcLoad2, out=pcLoad3);
+    PC(in=Aout, load=pcLoad3, inc=true, reset=reset, out[0..14]=pc);
 }
+
+//dest
+// A = instruction[5]
+// D = instruction[4]
+// M = instruction[3]
+
+//Jump
+//LwrBit = instruction[2]
+//EqBit = instruction[1]
+//BgrBit = instruction[0]

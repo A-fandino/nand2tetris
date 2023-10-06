@@ -40,6 +40,7 @@ CHIP CPU {
 
     PARTS:
     And(a=instruction[3], b=instruction[15], out=writeM);
+    And(a=instruction[4], b=instruction[15], out=writeD);
 
     //Decide wether or not write into A
     Not(in=instruction[15], out=isAinstr);
@@ -50,7 +51,7 @@ CHIP CPU {
     ARegister(in=aval, load=loadA, out=Aout, out[0..14]=addressM);
     Mux16(a=Aout, b=inM, sel=instruction[12], out=aOrM);
     ALU(x=Dout, y=aOrM, zx=instruction[11], nx=instruction[10], zy=instruction[9], ny=instruction[8], f=instruction[7], no=instruction[6], out=aluOut, out=outM, zr=zr, ng=ng);
-    DRegister(in=aluOut, load=instruction[4], out=Dout);
+    DRegister(in=aluOut, load=writeD, out=Dout);
     
     // JUMP
     Or(a=ng, b=zr, out=nonPstv);

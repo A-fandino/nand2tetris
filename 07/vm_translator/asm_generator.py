@@ -78,13 +78,22 @@ class AsmGenerator:
     def pop_instruction(self, memory_space: str, relative_address: int):
         if memory_space == "constant":
             raise Exception("Cannot pop to constant")
-        # point_to_address = self.point_to_address(memory_space, relative_address)
-        # return f"""{point_to_address}
-        # D=A
-        # @{SP}
-        # M=M-1
-        # D=M
-        # """
+
+        self.writeln(f"@{relative_address}")
+        self.writeln("D=A")
+        self.writeln(self.get_pointer(memory_space))
+
+        self.writeln("D=M+D")  # Address to save
+
+        self.writeln("@R13")
+        self.writeln("M=D")
+        self.writeln("@SP")
+        self.writeln("AM=M-1")
+        self.writeln("D=M")
+
+        self.writeln("@R13")
+        self.writeln("A=M")
+        self.writeln("M=D")
 
     def generate_comment(self, text: str):
         return f"{COMMENT_SYMBOL} {text}\n"

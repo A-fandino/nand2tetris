@@ -45,13 +45,14 @@ class AsmGenerator:
         self.write(text + "\n")
 
     def stack_instruction(self, instruction: str):
-        [operation, memory_space, address] = instruction.lower().strip()
+        operation, memory_space, address = instruction.lower().strip().split()
+        address = int(address)
         self.writeln(self.generate_comment(instruction))
         if operation == "push":
             self.push_instruction(memory_space, address)
             return
         if operation == "pop":
-            # code += self.pop_instruction(memory_space, address)
+            self.pop_instruction(memory_space, address)
             return
         raise Exception("Unexpected instruction: " + instruction)
 
@@ -63,8 +64,10 @@ class AsmGenerator:
         else:
             self.point_to_address(memory_space, relative_address)
             self.writeln("D=M")
-        self.writeln(f"@{SP}")
+        self.writeln("@SP")
         self.writeln("M=M+1")
+        self.writeln("A=M")
+        self.writeln("M=D")
 
     def point_to_address(self, memory_space: str, relative_address: int):
         if memory_space == "static":
@@ -79,6 +82,13 @@ class AsmGenerator:
         if memory_space == "constant":
             raise Exception("Cannot pop to constant")
 
+        if relative_address == 0 or memory_space in ("pointer", "static"):
+            self.writeln("@SP")
+            self.writeln("AM=M-1")
+            self.writeln("D=M")
+            self.writeln(self.get_pointer(memory_space, relative_address))
+            self.writeln("M=D")
+            return
         self.writeln(f"@{relative_address}")
         self.writeln("D=A")
         self.writeln(self.get_pointer(memory_space))
@@ -96,7 +106,11 @@ class AsmGenerator:
         self.writeln("M=D")
 
     def generate_comment(self, text: str):
-        return f"{COMMENT_SYMBOL} {text}\n"
+        return f"{COMMENT_SYMBOL} {text}"
 
-    def get_pointer(memory_space: str):
-        return "@" + segments_pointers[memory_space]
+    def get_pointer(self, memory_space: str, relative_address: int = None):
+        if memory_space == "pointer":
+            return "@THIS" if relative_address == 0 else "@THAT"
+        if memory_space == "static":
+            return f"@{TEMP_START + relative_address}"
+        return "@" + segments_pointer_names[memory_space]

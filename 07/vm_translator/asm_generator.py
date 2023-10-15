@@ -69,7 +69,7 @@ class AsmGenerator:
 
     def point_to_address(self, memory_space: str, relative_address: int):
         if memory_space == "static":
-            self.writeln(f"@{self.filename}.{relative_address}")
+            self.writeln(self.get_pointer(memory_space, relative_address))
             return
         self.writeln(f"@{relative_address}")
         self.writeln("D=A")
@@ -108,7 +108,11 @@ class AsmGenerator:
 
     def get_pointer(self, memory_space: str, relative_address: int = None):
         if memory_space == "pointer":
+            if relative_address is None:
+                raise Exception("Didn't get pointer address")
             return "@THIS" if relative_address == 0 else "@THAT"
         if memory_space == "static":
-            return f"@{TEMP_START + relative_address}"
+            if relative_address is None:
+                raise Exception("Static address must be provided")
+            return f"@{self.filename}.{relative_address}"
         return "@" + segments_pointer_names[memory_space]

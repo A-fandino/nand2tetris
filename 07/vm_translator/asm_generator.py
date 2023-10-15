@@ -101,7 +101,7 @@ class AsmGenerator:
         self.writeln("M=D")
 
     def point_to_address(self, memory_segment: str, relative_address: int):
-        if memory_segment in ("static", "temp"):
+        if relative_address == 0 or memory_segment in ("static", "temp"):
             self.writeln(self.get_pointer(memory_segment, relative_address))
             return
         self.writeln(f"@{relative_address}")
@@ -114,31 +114,34 @@ class AsmGenerator:
             raise Exception("Cannot pop to constant")
 
         if memory_segment in ("pointer", "static", "temp"):
-            self.writeln("@SP")
-            self.writeln("AM=M-1")
-            self.writeln("D=M")
+            self._decrement_stack_pointer()
             self.writeln(self.get_pointer(memory_segment, relative_address))
             self.writeln("M=D")
             return
-        if relative_address > 0:
-            self.writeln(f"@{relative_address}")
-            self.writeln("D=A")
+        if relative_address == 0:
+            self._decrement_stack_pointer()
             self.writeln(self.get_pointer(memory_segment, relative_address))
+            self.writeln("A=M")
+            self.writeln("M=D")
+            return
+        self.writeln(f"@{relative_address}")
+        self.writeln("D=A")
+        self.writeln(self.get_pointer(memory_segment, relative_address))
 
-            self.writeln("D=M+D")  # Address to save
-        else:
-            self.writeln(self.get_pointer(memory_segment, relative_address))
-            self.writeln("D=M")
+        self.writeln("D=M+D")  # Address to save
 
         self.writeln("@R13")
         self.writeln("M=D")
-        self.writeln("@SP")
-        self.writeln("AM=M-1")
-        self.writeln("D=M")
+        self._decrement_stack_pointer()
 
         self.writeln("@R13")
         self.writeln("A=M")
         self.writeln("M=D")
+
+    def _decrement_stack_pointer(self):
+        self.writeln("@SP")
+        self.writeln("AM=M-1")
+        self.writeln("D=M")
 
     def generate_comment(self, text: str):
         return f"{COMMENT_SYMBOL} {text}"

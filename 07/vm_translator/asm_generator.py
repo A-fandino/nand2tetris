@@ -7,10 +7,12 @@ THIS = 3
 THAT = 4
 
 TEMP_START = 5
-TEMP_END = 12
+TEMP_LENGTH = 7
 
 STATIC_START = 16
-STATIC_END = 255
+STATIC_LENGTH = 255 - STATIC_START
+
+LCL_LENGTH, ARG_LENGTH, THIS_LENGTH, THAT_LENGTH = 1000, 1000, 1000, 1000
 
 
 segments_pointers = {
@@ -27,6 +29,15 @@ segments_pointer_names = {
     "this": "THIS",
     "that": "THAT",
     "temp": f"R{TEMP_START}",
+}
+
+segment_limit = {
+    "local": LCL_LENGTH,
+    "argument": ARG_LENGTH,
+    "this": THIS_LENGTH,
+    "that": THAT_LENGTH,
+    "temp": TEMP_LENGTH,
+    "static": STATIC_LENGTH,
 }
 
 
@@ -117,6 +128,10 @@ class AsmGenerator:
         return f"{COMMENT_SYMBOL} {text}"
 
     def get_pointer(self, memory_space: str, relative_address: int = None):
+        if (limit := segment_limit.get(memory_space)) and relative_address > limit:
+            raise Exception(
+                f"Address {relative_address} is out of bounds for '{memory_space}'"
+            )
         if memory_space == "pointer":
             if relative_address is None:
                 raise Exception("Didn't get pointer address")

@@ -10,7 +10,8 @@ def main():
         lines = f.read()
 
     parser = VmParser(lines)
-    code = AsmGenerator("test.asm")
+    code = AsmGenerator("Test.asm")
+    code.init_setup()
     while (line := parser.next_line()) is not None:
         if not parser.is_instruction():
             continue

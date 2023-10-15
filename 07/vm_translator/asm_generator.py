@@ -27,7 +27,6 @@ segments_pointer_names = {
     "this": "THIS",
     "that": "THAT",
     "temp": f"R{TEMP_START}",
-    "static": "256",
 }
 
 
@@ -35,6 +34,17 @@ class AsmGenerator:
     def __init__(self, filename: str):
         self.filename = filename
         self.output = ""
+
+    def init_setup(self):
+        self.writeln(self.generate_comment("Setup"))
+        self.writeln("@256")
+        self.writeln("D=A")
+        self.writeln("@SP")
+        self.writeln("M=D")
+        self.writeln("@1015")  # FIXME: This is for testing purposes
+        self.writeln("D=A")
+        self.writeln("@LCL")
+        self.writeln("M=D")
 
     def write(self, text: str):
         self.output += text

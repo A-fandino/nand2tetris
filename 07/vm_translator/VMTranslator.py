@@ -6,7 +6,7 @@ from vm_parser import VmParser
 
 
 def main():
-    with open("./test", "r") as f:
+    with open("./Test.vm", "r") as f:
         lines = f.read()
 
     parser = VmParser(lines)
@@ -16,6 +16,8 @@ def main():
             continue
         code.stack_instruction(line)
     print(code.output)
+    with open("./Test.asm", "w") as f:
+        f.write(code.output)
 
 
 if __name__ == "__main__":

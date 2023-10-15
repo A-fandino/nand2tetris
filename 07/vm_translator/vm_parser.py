@@ -33,6 +33,10 @@ class VmParser:
         line = self.get_line()
         return not line or line.startswith("//")
 
+    def is_push_pop(self) -> bool:
+        line = self.get_line()
+        return line.startswith(("push", "pop"))
+
     def reset(self):
         self.lineNumber = -1
         self.instructionNumber = 0

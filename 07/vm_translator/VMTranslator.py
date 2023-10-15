@@ -15,7 +15,11 @@ def main():
     while (line := parser.next_line()) is not None:
         if not parser.is_instruction():
             continue
-        code.stack_instruction(line)
+        if parser.is_push_pop():
+            code.stack_instruction(line)
+            continue
+        code.arithmetic_instruction(line)
+    code.end_setup()
     print(code.output)
     with open("./Test.asm", "w") as f:
         f.write(code.output)

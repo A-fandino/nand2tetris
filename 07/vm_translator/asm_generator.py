@@ -45,6 +45,17 @@ class AsmGenerator:
     def __init__(self, filename: str):
         self.filename = filename
         self.output = ""
+        self.operations = {
+            "add": self._add,
+            "sub": self._sub,
+            "neg": self._neg,
+            "eq": self._eq,
+            "gt": self._gt,
+            "lt": self._lt,
+            "and": self._and,
+            "or": self._or,
+            "not": self._not,
+        }
 
     def init_setup(self):
         self.writeln(self.generate_comment("Setup"))
@@ -68,6 +79,10 @@ class AsmGenerator:
         self.writeln("@THAT")
         self.writeln("M=D")
 
+    def end_setup(self):
+        # self.d_is_true()
+        pass
+
     def write(self, text: str):
         self.output += text
 
@@ -86,7 +101,13 @@ class AsmGenerator:
             return
         raise Exception("Unexpected instruction: " + instruction)
 
-    # def arithmetic_instruction(instruction: str):
+    def arithmetic_instruction(self, instruction: str):
+        operation = instruction.lower().strip()
+        if operation not in self.operations:
+            raise Exception("Unexpected instruction: " + instruction)
+        self.writeln(self.generate_comment(instruction))
+        self.operations[operation]()
+
     def push_instruction(self, memory_segment: str, relative_address: int):
         if memory_segment == "constant":
             self.writeln(f"@{relative_address}")
@@ -140,10 +161,15 @@ class AsmGenerator:
         self.writeln("A=M")
         self.writeln("M=D")
 
-    def _decrement_stack_pointer(self):
+    def _increment_stack_pointer(self):
+        self.writeln("@SP")
+        self.writeln("M=M+1")
+
+    def _decrement_stack_pointer(self, set_d_to_m: bool = True):
         self.writeln("@SP")
         self.writeln("AM=M-1")
-        self.writeln("D=M")
+        if set_d_to_m:
+            self.writeln("D=M")
 
     def generate_comment(self, text: str):
         return f"{COMMENT_SYMBOL} {text}"
@@ -160,3 +186,78 @@ class AsmGenerator:
         if memory_segment == "temp":
             return f"@R{TEMP_START + relative_address}"
         return "@" + segments_pointer_names[memory_segment]
+
+    def _add(self):
+        self._decrement_stack_pointer(set_d_to_m=True)
+        self._decrement_stack_pointer(set_d_to_m=False)
+        self.writeln("M=D+M")
+        self._increment_stack_pointer()
+
+    def _sub(self):
+        self._decrement_stack_pointer(set_d_to_m=True)
+        self._decrement_stack_pointer(set_d_to_m=False)
+        self.writeln("M=M-D")
+        self._increment_stack_pointer()
+
+    def _neg(self):
+        self._decrement_stack_pointer(set_d_to_m=False)
+        self.writeln("M=-M")
+        self._increment_stack_pointer()
+
+    def _set_d_to_true_if_not_0(self, jmp_instr: str = "JEQ"):
+        label = f"END_IF_{len(self.output)}"
+        self.writeln(f"@{label}")
+        self.writeln(f"D;{jmp_instr}")
+        self.writeln("D=-1")  # Skip this if is zero
+        self.writeln(f"({label})")
+
+    def _eq(self, jmp_instr: str = "JEQ"):
+        self._decrement_stack_pointer(set_d_to_m=True)
+        self._decrement_stack_pointer(set_d_to_m=False)
+        self.writeln("D=D-M")
+        self._set_d_to_true_if_not_0(jmp_instr)
+        self.writeln("@SP")
+        self.writeln("A=M")
+        self.writeln("M=!D")
+        self._increment_stack_pointer()
+
+    def _gt(self):
+        self._eq("JLT")
+
+    def _lt(self):
+        self._eq("JGT")
+
+    def _and(self):
+        pass
+
+    def _or(self):
+        pass
+
+    def _not(self):
+        self._decrement_stack_pointer(set_d_to_m=True)
+        self._set_d_to_true_if_not_0()
+        self.writeln("M=!D")
+        self._increment_stack_pointer()
+
+    # def d_is_true(self):
+    #     self.writeln("(D_IS_TRUE)")
+    #     self.writeln("@R14")
+    #     self.writeln("A=M")
+    #     self.writeln("D;JEQ")
+    #     self.writeln("D=1")
+    #     self.writeln("0;JMP")
+
+    # def if_true_d_1(self):
+    #     label = f"END_IF_{hash(len(self.output))}"
+    #     self.writeln("@R13")
+    #     self.writeln("M=D")
+    #     self.writeln(f"@{label}")
+    #     self.writeln("D=A")
+    #     self.writeln("@R14")
+    #     self.writeln("M=D")
+    #     self.writeln("@R13")
+    #     self.writeln("D=M")
+    #     self.writeln(f"@D_IS_TRUE")
+    #     self.writeln("D;JEQ")
+    #     self.writeln("D=1")
+    #     self.writeln(f"({label})")

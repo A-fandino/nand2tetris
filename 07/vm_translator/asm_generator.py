@@ -28,7 +28,6 @@ segments_pointer_names = {
     "argument": "ARG",
     "this": "THIS",
     "that": "THAT",
-    # "temp": f"R{TEMP_START}",
 }
 
 segment_limit = {
@@ -101,7 +100,7 @@ class AsmGenerator:
         self.writeln("M=D")
 
     def point_to_address(self, memory_segment: str, relative_address: int):
-        if relative_address == 0 or memory_segment in ("static", "temp"):
+        if relative_address == 0 or memory_segment in ("static", "temp", "pointer"):
             self.writeln(self.get_pointer(memory_segment, relative_address))
             return
         self.writeln(f"@{relative_address}")

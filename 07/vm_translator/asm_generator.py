@@ -28,7 +28,7 @@ segments_pointer_names = {
     "argument": "ARG",
     "this": "THIS",
     "that": "THAT",
-    "temp": f"R{TEMP_START}",
+    # "temp": f"R{TEMP_START}",
 }
 
 segment_limit = {
@@ -38,6 +38,7 @@ segment_limit = {
     "that": THAT_LENGTH,
     "temp": TEMP_LENGTH,
     "static": STATIC_LENGTH,
+    "pointer": 1,
 }
 
 
@@ -52,9 +53,20 @@ class AsmGenerator:
         self.writeln("D=A")
         self.writeln("@SP")
         self.writeln("M=D")
-        self.writeln("@1015")  # FIXME: This is for testing purposes
+        # FIXME: This is for testing purposes
+        self.writeln("@1000")
         self.writeln("D=A")
         self.writeln("@LCL")
+        self.writeln("M=D")
+
+        self.writeln("@2000")
+        self.writeln("D=A")
+        self.writeln("@THIS")
+        self.writeln("M=D")
+
+        self.writeln("@3000")
+        self.writeln("D=A")
+        self.writeln("@THAT")
         self.writeln("M=D")
 
     def write(self, text: str):
@@ -89,30 +101,34 @@ class AsmGenerator:
         self.writeln("M=D")
 
     def point_to_address(self, memory_segment: str, relative_address: int):
-        if memory_segment == "static":
+        if memory_segment in ("static", "temp"):
             self.writeln(self.get_pointer(memory_segment, relative_address))
             return
         self.writeln(f"@{relative_address}")
         self.writeln("D=A")
-        self.writeln(self.get_pointer(memory_segment))
+        self.writeln(self.get_pointer(memory_segment, relative_address))
         self.writeln("A=M+D")
 
     def pop_instruction(self, memory_segment: str, relative_address: int):
         if memory_segment == "constant":
             raise Exception("Cannot pop to constant")
 
-        if relative_address == 0 or memory_segment in ("pointer", "static"):
+        if memory_segment in ("pointer", "static", "temp"):
             self.writeln("@SP")
             self.writeln("AM=M-1")
             self.writeln("D=M")
             self.writeln(self.get_pointer(memory_segment, relative_address))
             self.writeln("M=D")
             return
-        self.writeln(f"@{relative_address}")
-        self.writeln("D=A")
-        self.writeln(self.get_pointer(memory_segment))
+        if relative_address > 0:
+            self.writeln(f"@{relative_address}")
+            self.writeln("D=A")
+            self.writeln(self.get_pointer(memory_segment, relative_address))
 
-        self.writeln("D=M+D")  # Address to save
+            self.writeln("D=M+D")  # Address to save
+        else:
+            self.writeln(self.get_pointer(memory_segment, relative_address))
+            self.writeln("D=M")
 
         self.writeln("@R13")
         self.writeln("M=D")
@@ -127,17 +143,15 @@ class AsmGenerator:
     def generate_comment(self, text: str):
         return f"{COMMENT_SYMBOL} {text}"
 
-    def get_pointer(self, memory_segment: str, relative_address: int = None):
+    def get_pointer(self, memory_segment: str, relative_address: int):
         if (limit := segment_limit.get(memory_segment)) and relative_address > limit:
             raise Exception(
                 f"Address {relative_address} is out of bounds for '{memory_segment}'"
             )
         if memory_segment == "pointer":
-            if relative_address is None:
-                raise Exception("Didn't get pointer address")
             return "@THIS" if relative_address == 0 else "@THAT"
         if memory_segment == "static":
-            if relative_address is None:
-                raise Exception("Static address must be provided")
             return f"@{self.filename}.{relative_address}"
+        if memory_segment == "temp":
+            return f"@R{TEMP_START + relative_address}"
         return "@" + segments_pointer_names[memory_segment]

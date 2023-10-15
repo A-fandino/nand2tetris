@@ -64,53 +64,53 @@ class AsmGenerator:
         self.write(text + "\n")
 
     def stack_instruction(self, instruction: str):
-        operation, memory_space, address = instruction.lower().strip().split()
+        operation, memory_segment, address = instruction.lower().strip().split()
         address = int(address)
         self.writeln(self.generate_comment(instruction))
         if operation == "push":
-            self.push_instruction(memory_space, address)
+            self.push_instruction(memory_segment, address)
             return
         if operation == "pop":
-            self.pop_instruction(memory_space, address)
+            self.pop_instruction(memory_segment, address)
             return
         raise Exception("Unexpected instruction: " + instruction)
 
     # def arithmetic_instruction(instruction: str):
-    def push_instruction(self, memory_space: str, relative_address: int):
-        if memory_space == "constant":
+    def push_instruction(self, memory_segment: str, relative_address: int):
+        if memory_segment == "constant":
             self.writeln(f"@{relative_address}")
             self.writeln("D=A")
         else:
-            self.point_to_address(memory_space, relative_address)
+            self.point_to_address(memory_segment, relative_address)
             self.writeln("D=M")
         self.writeln("@SP")
         self.writeln("M=M+1")
         self.writeln("A=M-1")
         self.writeln("M=D")
 
-    def point_to_address(self, memory_space: str, relative_address: int):
-        if memory_space == "static":
-            self.writeln(self.get_pointer(memory_space, relative_address))
+    def point_to_address(self, memory_segment: str, relative_address: int):
+        if memory_segment == "static":
+            self.writeln(self.get_pointer(memory_segment, relative_address))
             return
         self.writeln(f"@{relative_address}")
         self.writeln("D=A")
-        self.writeln(self.get_pointer(memory_space))
+        self.writeln(self.get_pointer(memory_segment))
         self.writeln("A=M+D")
 
-    def pop_instruction(self, memory_space: str, relative_address: int):
-        if memory_space == "constant":
+    def pop_instruction(self, memory_segment: str, relative_address: int):
+        if memory_segment == "constant":
             raise Exception("Cannot pop to constant")
 
-        if relative_address == 0 or memory_space in ("pointer", "static"):
+        if relative_address == 0 or memory_segment in ("pointer", "static"):
             self.writeln("@SP")
             self.writeln("AM=M-1")
             self.writeln("D=M")
-            self.writeln(self.get_pointer(memory_space, relative_address))
+            self.writeln(self.get_pointer(memory_segment, relative_address))
             self.writeln("M=D")
             return
         self.writeln(f"@{relative_address}")
         self.writeln("D=A")
-        self.writeln(self.get_pointer(memory_space))
+        self.writeln(self.get_pointer(memory_segment))
 
         self.writeln("D=M+D")  # Address to save
 
@@ -127,17 +127,17 @@ class AsmGenerator:
     def generate_comment(self, text: str):
         return f"{COMMENT_SYMBOL} {text}"
 
-    def get_pointer(self, memory_space: str, relative_address: int = None):
-        if (limit := segment_limit.get(memory_space)) and relative_address > limit:
+    def get_pointer(self, memory_segment: str, relative_address: int = None):
+        if (limit := segment_limit.get(memory_segment)) and relative_address > limit:
             raise Exception(
-                f"Address {relative_address} is out of bounds for '{memory_space}'"
+                f"Address {relative_address} is out of bounds for '{memory_segment}'"
             )
-        if memory_space == "pointer":
+        if memory_segment == "pointer":
             if relative_address is None:
                 raise Exception("Didn't get pointer address")
             return "@THIS" if relative_address == 0 else "@THAT"
-        if memory_space == "static":
+        if memory_segment == "static":
             if relative_address is None:
                 raise Exception("Static address must be provided")
             return f"@{self.filename}.{relative_address}"
-        return "@" + segments_pointer_names[memory_space]
+        return "@" + segments_pointer_names[memory_segment]

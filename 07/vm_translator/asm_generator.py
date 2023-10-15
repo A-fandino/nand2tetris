@@ -100,8 +100,11 @@ class AsmGenerator:
         self.writeln("M=D")
 
     def point_to_address(self, memory_segment: str, relative_address: int):
-        if relative_address == 0 or memory_segment in ("static", "temp", "pointer"):
+        IS_DIRECT_REFERENCE = memory_segment in ("static", "temp", "pointer")
+        if relative_address == 0 or IS_DIRECT_REFERENCE:
             self.writeln(self.get_pointer(memory_segment, relative_address))
+            if not IS_DIRECT_REFERENCE:
+                self.writeln("A=M")
             return
         self.writeln(f"@{relative_address}")
         self.writeln("D=A")

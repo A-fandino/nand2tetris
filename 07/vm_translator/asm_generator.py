@@ -12,8 +12,6 @@ TEMP_END = 12
 STATIC_START = 16
 STATIC_END = 255
 
-STACK_START = 256
-STACK_END = 2047
 
 segments_pointers = {
     "local": LCL,
@@ -66,7 +64,7 @@ class AsmGenerator:
             self.writeln("D=M")
         self.writeln("@SP")
         self.writeln("M=M+1")
-        self.writeln("A=M")
+        self.writeln("A=M-1")
         self.writeln("M=D")
 
     def point_to_address(self, memory_space: str, relative_address: int):

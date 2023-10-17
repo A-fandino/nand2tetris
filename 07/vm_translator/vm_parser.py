@@ -1,3 +1,6 @@
+from typing import Optional
+
+
 class VmParser:
     text: str = None
     textLines: list = None
@@ -15,7 +18,9 @@ class VmParser:
             self.instructionNumber += 1
         return self.get_line()
 
-    def get_line(self, strip: bool = True, remove_comments: bool = True) -> str | None:
+    def get_line(
+        self, strip: bool = True, remove_comments: bool = True
+    ) -> Optional[str]:
         if self.lineNumber >= len(self.textLines):
             return None
         line = self.textLines[self.lineNumber]

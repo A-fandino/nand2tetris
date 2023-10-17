@@ -211,21 +211,21 @@ class AsmGenerator:
         self.writeln("D=-1")  # Skip this if is zero
         self.writeln(f"({label})")
 
-    def _eq(self, jmp_instr: str = "JEQ"):
+    def _eq(self):
         self._decrement_stack_pointer(set_d_to_m=True)
         self._decrement_stack_pointer(set_d_to_m=False)
         self.writeln("D=D-M")
-        self._set_d_to_true_if_not_0(jmp_instr)
+        self._set_d_to_true_if_not_0()
         self.writeln("@SP")
         self.writeln("A=M")
         self.writeln("M=!D")
         self._increment_stack_pointer()
 
     def _gt(self):
-        self._eq("JLT")
+        self.default_compare("JGT")
 
     def _lt(self):
-        self._eq("JGT")
+        self.default_compare("JLT")
 
     def _and(self):
         pass
@@ -239,25 +239,27 @@ class AsmGenerator:
         self.writeln("M=!D")
         self._increment_stack_pointer()
 
-    # def d_is_true(self):
-    #     self.writeln("(D_IS_TRUE)")
-    #     self.writeln("@R14")
-    #     self.writeln("A=M")
-    #     self.writeln("D;JEQ")
-    #     self.writeln("D=1")
-    #     self.writeln("0;JMP")
+    def default_compare(self, jmp_instr: str):
+        id = str(len(self.output))
+        IF_TRUE = "IF_TRUE_" + id
+        END_IF = "END_IF_" + id
+        self._decrement_stack_pointer(set_d_to_m=True)
+        self._decrement_stack_pointer(set_d_to_m=False)
+        self.writeln("D=M-D")
 
-    # def if_true_d_1(self):
-    #     label = f"END_IF_{hash(len(self.output))}"
-    #     self.writeln("@R13")
-    #     self.writeln("M=D")
-    #     self.writeln(f"@{label}")
-    #     self.writeln("D=A")
-    #     self.writeln("@R14")
-    #     self.writeln("M=D")
-    #     self.writeln("@R13")
-    #     self.writeln("D=M")
-    #     self.writeln(f"@D_IS_TRUE")
-    #     self.writeln("D;JEQ")
-    #     self.writeln("D=1")
-    #     self.writeln(f"({label})")
+        # IF
+        self.writeln(f"@{IF_TRUE}")
+        self.writeln(f"D;{jmp_instr}")
+        self.writeln("D=0")
+        self.writeln(f"@{END_IF}")
+        self.writeln("0;JMP")
+        self.writeln(f"({IF_TRUE})")
+        self.writeln(f"D=-1")
+        self.writeln(f"({END_IF})")
+        # ENDIF
+
+        # SET BOOLEAN TO STACK
+        self.writeln("@SP")
+        self.writeln("A=M")
+        self.writeln("M=D")
+        self._increment_stack_pointer()

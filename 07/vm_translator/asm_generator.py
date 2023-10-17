@@ -230,14 +230,20 @@ class AsmGenerator:
         self.default_compare("JLT")
 
     def _and(self):
-        pass
+        self._decrement_stack_pointer(set_d_to_m=True)
+        self._decrement_stack_pointer(set_d_to_m=False)
+        self.writeln("M=D&M")
+        self._increment_stack_pointer()
 
     def _or(self):
-        pass
+        self._decrement_stack_pointer(set_d_to_m=True)
+        self._decrement_stack_pointer(set_d_to_m=False)
+        self.writeln("M=D|M")
+        self._increment_stack_pointer()
 
     def _not(self):
         self._decrement_stack_pointer(set_d_to_m=True)
-        self._set_d_to_true_if_not_0()
+        # self._set_d_to_true_if_not_0()  #! This may be unnecessary
         self.writeln("M=!D")
         self._increment_stack_pointer()
 

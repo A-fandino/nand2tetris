@@ -92,6 +92,8 @@ class AsmGenerator:
     def stack_instruction(self, instruction: str):
         operation, memory_segment, address = instruction.lower().strip().split()
         address = int(address)
+        if address < 0:
+            raise Exception("Address cannot be negative")
         self.writeln(self.generate_comment(instruction))
         if operation == "push":
             self.push_instruction(memory_segment, address)

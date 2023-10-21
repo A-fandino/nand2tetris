@@ -46,21 +46,7 @@ class AsmGenerator:
         self.writeln("D=A")
         self.writeln("@SP")
         self.writeln("M=D")
-        # FIXME: This is for testing purposes
-        self.writeln("@1000")
-        self.writeln("D=A")
-        self.writeln("@LCL")
-        self.writeln("M=D")
-
-        self.writeln("@2000")
-        self.writeln("D=A")
-        self.writeln("@THIS")
-        self.writeln("M=D")
-
-        self.writeln("@3000")
-        self.writeln("D=A")
-        self.writeln("@THAT")
-        self.writeln("M=D")
+        self.call_instruction("call Sys.init 0")
 
     def write(self, text: str):
         self.output += text

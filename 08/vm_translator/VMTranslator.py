@@ -22,11 +22,15 @@ def main():
     code = AsmGenerator()
     source_files = [args.path]
     if os.path.isdir(args.path):
+        code.init_setup()  # We only setup when compiling from a directory
         source_files = [
             os.path.join(args.path, f)
             for f in os.listdir(args.path)
             if os.path.isfile(os.path.join(args.path, f)) and f.endswith(".vm")
         ]
+        if not source_files:
+            print("No .vm files found in directory")
+            return
     for file in source_files:
         filename = os.path.basename(file)
         code.set_filename(filename.split(".")[0])

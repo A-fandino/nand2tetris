@@ -42,8 +42,9 @@ segment_limit = {
 
 
 class AsmGenerator:
-    def __init__(self, filename: str):
-        self.filename = filename
+    filename = None
+
+    def __init__(self):
         self.output = ""
         self.operations = {
             "add": self._add,
@@ -56,6 +57,9 @@ class AsmGenerator:
             "or": self._or,
             "not": self._not,
         }
+
+    def set_filename(self, filename: str):
+        self.filename = filename
 
     def init_setup(self):
         self.writeln(self.generate_comment("Setup"))
@@ -78,10 +82,6 @@ class AsmGenerator:
         self.writeln("D=A")
         self.writeln("@THAT")
         self.writeln("M=D")
-
-    def end_setup(self):
-        # self.d_is_true()
-        pass
 
     def write(self, text: str):
         self.output += text

@@ -1,28 +1,7 @@
-COMMENT_SYMBOL = "//"
-
-SP = 0
-LCL = 1
-ARG = 2
-THIS = 3
-THAT = 4
-
-TEMP_START = 5
-TEMP_LENGTH = 7
-
-STATIC_START = 16
-STATIC_LENGTH = 255 - STATIC_START
-
-LCL_LENGTH, ARG_LENGTH, THIS_LENGTH, THAT_LENGTH = 1000, 1000, 1000, 1000
+import constants as c
+from constants import COMMENT_SYMBOL
 
 
-segments_pointers = {
-    "local": LCL,
-    "argument": ARG,
-    "this": THIS,
-    "that": THAT,
-    "temp": TEMP_START,
-    "static": STATIC_START,
-}
 segments_pointer_names = {
     "local": "LCL",
     "argument": "ARG",
@@ -31,12 +10,12 @@ segments_pointer_names = {
 }
 
 segment_limit = {
-    "local": LCL_LENGTH,
-    "argument": ARG_LENGTH,
-    "this": THIS_LENGTH,
-    "that": THAT_LENGTH,
-    "temp": TEMP_LENGTH,
-    "static": STATIC_LENGTH,
+    "local": c.LCL_LENGTH,
+    "argument": c.ARG_LENGTH,
+    "this": c.THIS_LENGTH,
+    "that": c.THAT_LENGTH,
+    "temp": c.TEMP_LENGTH,
+    "static": c.STATIC_LENGTH,
     "pointer": 1,
 }
 
@@ -47,15 +26,15 @@ class AsmGenerator:
     def __init__(self):
         self.output = ""
         self.operations = {
-            "add": self._add,
-            "sub": self._sub,
-            "neg": self._neg,
-            "eq": self._eq,
-            "gt": self._gt,
-            "lt": self._lt,
-            "and": self._and,
-            "or": self._or,
-            "not": self._not,
+            c.ADD: self._add,
+            c.SUB: self._sub,
+            c.NEG: self._neg,
+            c.EQ: self._eq,
+            c.GT: self._gt,
+            c.LT: self._lt,
+            c.AND: self._and,
+            c.OR: self._or,
+            c.NOT: self._not,
         }
 
     def set_filename(self, filename: str):
@@ -95,10 +74,10 @@ class AsmGenerator:
         if address < 0:
             raise Exception("Address cannot be negative")
         self.writeln(self.generate_comment(instruction))
-        if operation == "push":
+        if operation == c.PUSH:
             self.push_instruction(memory_segment, address)
             return
-        if operation == "pop":
+        if operation == c.POP:
             self.pop_instruction(memory_segment, address)
             return
         raise Exception("Unexpected instruction: " + instruction)
@@ -186,7 +165,7 @@ class AsmGenerator:
         if memory_segment == "static":
             return f"@{self.filename}.{relative_address}"
         if memory_segment == "temp":
-            return f"@R{TEMP_START + relative_address}"
+            return f"@R{c.TEMP_START + relative_address}"
         return "@" + segments_pointer_names[memory_segment]
 
     def _add(self):

@@ -22,6 +22,8 @@ segment_limit = {
 
 class AsmGenerator:
     filename = None
+    actual_function: str = None
+    calls_in_function: dict = None
 
     def __init__(self):
         self.output = ""
@@ -36,6 +38,7 @@ class AsmGenerator:
             c.OR: self._or,
             c.NOT: self._not,
         }
+        self.calls_in_function = {}
 
     def set_filename(self, filename: str):
         self.filename = filename
@@ -274,6 +277,12 @@ class AsmGenerator:
 
     def function_instruction(self, line: str):
         assert line.startswith(c.FUNCTION)
+        _, func_name, nvars = line.split()
+        nvars = int(nvars)
+        self.actual_function = func_name
+        self.writeln(f"({func_name})")
+        for _ in range(nvars):
+            self.push_instruction("constant", 0)
 
     def call_instruction(self, line: str):
         assert line.startswith(c.CALL)

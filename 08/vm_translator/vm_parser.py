@@ -1,4 +1,5 @@
 from typing import Optional
+import constants as c
 
 
 class VmParser:
@@ -25,22 +26,26 @@ class VmParser:
             return None
         line = self.textLines[self.lineNumber]
         if remove_comments:
-            line = line.split("//")[0].strip()
+            line = line.split(c.COMMENT_SYMBOL)[0].strip()
         if strip:
             line = line.strip()
         return line
 
     def is_instruction(self) -> bool:
         line = self.get_line()
-        return line and not line.startswith("//")
+        return line and not line.startswith(c.COMMENT_SYMBOL)
 
     def is_whitespace(self) -> bool:
         line = self.get_line()
-        return not line or line.startswith("//")
+        return not line or line.startswith(c.COMMENT_SYMBOL)
 
     def is_push_pop(self) -> bool:
         line = self.get_line()
-        return line.startswith(("push", "pop"))
+        return line.startswith((c.PUSH, c.POP))
+
+    def is_control_flow(self, instruction: str) -> bool:
+        command = instruction.split()[0]
+        return command in c.FLOW_CONTROL_COMMANDS
 
     def reset(self):
         self.lineNumber = -1

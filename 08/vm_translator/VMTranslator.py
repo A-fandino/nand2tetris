@@ -9,6 +9,12 @@ from argparse import ArgumentParser
 argparser = ArgumentParser()
 argparser.add_argument("path", help="VM file or directory to translate")
 argparser.add_argument("-o", "--output", help="Output file name")
+argparser.add_argument(
+    "--origin-directory",
+    action="store_true",
+    dest="origin_directory",
+    help="Generates the file in the same directory as the input file if not output file is specified",
+)
 args = argparser.parse_args()
 
 
@@ -35,10 +41,15 @@ def main():
             if parser.is_push_pop():
                 code.stack_instruction(line)
                 continue
+            if parser.is_control_flow(line):
+                code.control_flow_instruction(line)
+                continue
             code.arithmetic_instruction(line)
     output = args.output
     if output is None:
         output = os.path.basename(os.path.normpath(args.path)).split(".")[0] + ".asm"
+        if args.origin_directory:
+            output = os.path.join(os.path.dirname(args.path), output)
     with open(output, "w") as f:
         f.write(code.output)
     print(output)

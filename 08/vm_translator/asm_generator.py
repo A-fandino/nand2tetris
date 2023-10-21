@@ -250,3 +250,47 @@ class AsmGenerator:
         self.writeln("A=M")
         self.writeln("M=D")
         self._increment_stack_pointer()
+
+    def control_flow_instruction(self, line: str):
+        self.writeln(self.generate_comment(line))
+        if line.startswith(c.LABEL):
+            self.label_instruction(line)
+            return
+        if line.startswith(c.GOTO) or line.startswith(c.IF_GOTO):
+            self.goto_instruction(line)
+            return
+        if line.startswith(c.FUNCTION):
+            self.function_instruction(line)
+            return
+        if line.startswith(c.CALL):
+            self.call_instruction(line)
+            return
+        if line.startswith(c.RETURN):
+            self.return_instruction(line)
+            return
+        raise Exception("Unexpected instruction: " + line)
+
+    def label_instruction(self, line: str):
+        assert line.startswith(c.LABEL)
+        _, label = line.split()
+        self.writeln(f"({label})")
+
+    def goto_instruction(self, line: str):
+        assert line.startswith(c.GOTO) or line.startswith(c.IF_GOTO)
+        _, label = line.split()
+        if line.startswith(c.GOTO):
+            self.writeln(f"@{label}")
+            self.writeln("0;JMP")
+            return
+        self._decrement_stack_pointer()
+        self.writeln(f"@{label}")
+        self.writeln("D;JNE")
+
+    def function_instruction(self, line: str):
+        assert line.startswith(c.FUNCTION)
+
+    def call_instruction(self, line: str):
+        assert line.startswith(c.CALL)
+
+    def return_instruction(self, line: str):
+        assert line.startswith(c.RETURN)

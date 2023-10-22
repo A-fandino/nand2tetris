@@ -49,6 +49,14 @@ class AsmGenerator:
         self.writeln("D=A")
         self.writeln("@SP")
         self.writeln("M=D")
+        self.writeln("@LCL")
+        self.writeln("M=-A")
+        self.writeln("@ARG")
+        self.writeln("M=-A")
+        self.writeln("@THIS")
+        self.writeln("M=-A")
+        self.writeln("@THAT")
+        self.writeln("M=-A")
         self.call_instruction("call Sys.init 0")
 
     def write(self, text: str):

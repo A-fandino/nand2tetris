@@ -262,6 +262,8 @@ class AsmGenerator:
     def label_instruction(self, line: str):
         assert line.startswith(c.LABEL)
         _, label = line.split()
+        if self.actual_function:
+            label = f"{self.actual_function}.${label}"
         self.writeln(f"({label})")
 
     def goto_instruction(self, line: str):
@@ -286,6 +288,82 @@ class AsmGenerator:
 
     def call_instruction(self, line: str):
         assert line.startswith(c.CALL)
+        _, func_name, nargs = line.split()
+        nargs = int(nargs)
+
+        return_address = self.get_return_address()
+        self.add_call()
+        # Pushes return address
+        self.writeln(f"@{return_address}")
+        self.writeln("D=A")
+        self._increment_stack_pointer()
+        self.writeln("A=M-1")
+        self.writeln("M=D")
+        # Pushes LCL, ARG, THIS, THAT
+        for pointer in ("LCL", "ARG", "THIS", "THAT"):
+            self.writeln(f"@{pointer}")
+            self.writeln("D=M")
+            self._increment_stack_pointer()
+            self.writeln("A=M-1")
+            self.writeln("M=D")
+        self.writeln("@SP")
+        self.writeln("D=M")
+        # Set local to current SP
+        self.writeln("@LCL")
+        self.writeln("M=D")
+        # Set ARGS to current SP - nargs - 5
+        self.writeln(f"@{nargs + 5}")
+        self.writeln("D=D-A")
+        self.writeln("@ARG")
+        self.writeln("M=D")
+        # Goto function
+        self.writeln(f"@{func_name}")
+        self.writeln("0;JMP")
+
+        # Sets return address
+        self.writeln(f"({return_address})")
+
+    def get_call_number(self) -> int:
+        return self.calls_in_function.get(self.actual_function, 1)
+
+    def get_return_address(self) -> str:
+        return f"{self.actual_function}$ret.{self.get_call_number()}"
+
+    def add_call(self) -> int:
+        calls = self.get_call_number() + 1
+        self.calls_in_function[self.actual_function] = calls
+        return calls
 
     def return_instruction(self, line: str):
         assert line.startswith(c.RETURN)
+        # endFrame = LCL
+        self.writeln("@LCL")
+        self.writeln("D=M")
+        self.writeln("@R13")
+        self.writeln("M=D")
+        # rtAddress = *(endFrame - 5)
+        self.writeln("@5")
+        self.writeln("A=D-A")
+        self.writeln("D=M")
+        self.writeln("@R14")
+        self.writeln("M=D")
+
+        self.pop_instruction("argument", 0)  # Pops return value to ARG[0]
+        # Move SP to ARG + 1
+        self.writeln("@ARG")
+        self.writeln("D=M+1")
+        self.writeln("@SP")
+        self.writeln("M=D")
+        # Restore THAT, THIS, ARG, LCL
+        for pointer in ("THAT", "THIS", "ARG", "LCL"):
+            self.writeln("@R13")
+            self.writeln("AM=M-1")
+            self.writeln("D=M")
+            self.writeln(f"@{pointer}")
+            self.writeln("M=D")
+        # Go back to caller (rtAddress)
+        self.writeln(f"@R14")
+        self.writeln("A=M")
+        self.writeln("0;JMP")
+
+        self.actual_function = None

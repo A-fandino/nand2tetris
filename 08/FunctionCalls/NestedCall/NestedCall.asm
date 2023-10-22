@@ -132,7 +132,7 @@ M=D
 // label LOOP
 (Sys.init.$LOOP)
 // goto LOOP
-@LOOP
+@Sys.init.$LOOP
 0;JMP
 // function Sys.main 5
 (Sys.main)

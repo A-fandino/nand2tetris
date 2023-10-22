@@ -281,12 +281,11 @@ class AsmGenerator:
     def goto_instruction(self, line: str):
         assert line.startswith(c.GOTO) or line.startswith(c.IF_GOTO)
         _, label = line.split()
+        self.writeln("@" + self.generate_label(label))
         if line.startswith(c.GOTO):
-            self.writeln(f"@{label}")
             self.writeln("0;JMP")
             return
         self._decrement_stack_pointer()
-        self.writeln(f"@{label}")
         self.writeln("D;JNE")
 
     def function_instruction(self, line: str):

@@ -242,29 +242,33 @@ class AsmGenerator:
 
     def control_flow_instruction(self, line: str):
         self.writeln(self.generate_comment(line))
-        if line.startswith(c.LABEL):
-            self.label_instruction(line)
+        instruction, *args = line.split()
+        if instruction == c.LABEL:
+            assert len(args) == 1
+            self.label_instruction(args[0])
             return
-        if line.startswith(c.GOTO) or line.startswith(c.IF_GOTO):
+        if instruction == c.GOTO or instruction == c.IF_GOTO:
             self.goto_instruction(line)
             return
-        if line.startswith(c.FUNCTION):
+        if instruction == c.FUNCTION:
             self.function_instruction(line)
             return
-        if line.startswith(c.CALL):
+        if instruction == c.CALL:
             self.call_instruction(line)
             return
-        if line.startswith(c.RETURN):
+        if instruction == c.RETURN:
             self.return_instruction(line)
             return
         raise Exception("Unexpected instruction: " + line)
 
-    def label_instruction(self, line: str):
-        assert line.startswith(c.LABEL)
-        _, label = line.split()
-        if self.actual_function:
-            label = f"{self.actual_function}.${label}"
+    def label_instruction(self, label: str):
+        label = self.generate_label(label)
         self.writeln(f"({label})")
+
+    def generate_label(self, label: str):
+        if self.actual_function:
+            return f"{self.actual_function}.${label}"
+        return label
 
     def goto_instruction(self, line: str):
         assert line.startswith(c.GOTO) or line.startswith(c.IF_GOTO)

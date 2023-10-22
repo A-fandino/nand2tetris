@@ -378,5 +378,3 @@ class AsmGenerator:
         self.writeln(f"@R14")
         self.writeln("A=M")
         self.writeln("0;JMP")
-
-        self.actual_function = None

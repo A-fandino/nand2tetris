@@ -331,7 +331,7 @@ class AsmGenerator:
         return self.calls_in_function.get(self.actual_function, 1)
 
     def get_return_address(self) -> str:
-        return f"{self.actual_function}$ret.{self.get_call_number()}"
+        return f"{self.actual_function or '$MAIN_SCOPE$'}$ret.{self.get_call_number()}"
 
     def add_call(self) -> int:
         calls = self.get_call_number() + 1

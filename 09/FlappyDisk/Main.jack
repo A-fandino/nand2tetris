@@ -1,0 +1,9 @@
+class Main {
+    function void main() {
+        var FlappyGame game;
+        let game = new FloppyGame();
+        do game.run();
+        do game.dispose();
+        return;
+    }
+}

@@ -1,0 +1,5 @@
+class ScreenHelper {	
+    function int GetScreenLocation(int x, int y) {
+        return (y * 32) + x;
+    }
+}

@@ -21,11 +21,11 @@ class FlappyGame {
         var int location;
         do Screen.clearScreen();
         let location = ScreenHelper.GetScreenLocation(x, y);
-        do drawBird(location);
+        do drawFloppy(location);
         return;
     } 
 
-function void drawFloppy(int location) {
+    method void drawFloppy(int location) {
     var int memAddress;
 	let memAddress = 16384+location;
 	do Memory.poke(memAddress+0, 16383);
@@ -47,16 +47,20 @@ function void drawFloppy(int location) {
 	return;
 }
 
+    method void dispose() {
+        do Memory.deAlloc(this);
+        return;
+    }
 
     method void run() {
         while (true) {
             let score = score + 1;
             let y = y + 1; // Move the bird down
-            if (y > 200) {
+            if (y > 100) {
                 return;
             }
             do draw();
-            do Sys.wait(200);
+            do Sys.wait(7);
         }
     return;
     }

@@ -1,7 +1,7 @@
 class Main {
     function void main() {
         var FlappyGame game;
-        let game = new FloppyGame();
+        let game = FlappyGame.new();
         do game.run();
         do game.dispose();
         return;

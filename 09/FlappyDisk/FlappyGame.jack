@@ -13,7 +13,7 @@ class FlappyGame {
     }
 
     method void flap() {
-        let y = Math.max(0, y - 10); // Move the bird up
+        let y = Math.max(0, y - 30); // Move the bird up
         return;
     }
     
@@ -53,14 +53,27 @@ class FlappyGame {
     }
 
     method void run() {
+        var char key;
+
         while (true) {
+            if (key = 0) {
+                let key = Keyboard.keyPressed();
+            }
             let score = score + 1;
             let y = y + 1; // Move the bird down
-            if (y > 100) {
+
+            do draw();
+
+            if (key = 32) {
+                let key = Keyboard.keyPressed();
+                if (key = 0) {
+                    do flap();
+                }
+            }
+            if (y > 500) {
                 return;
             }
-            do draw();
-            do Sys.wait(7);
+            do Sys.wait(15);
         }
     return;
     }

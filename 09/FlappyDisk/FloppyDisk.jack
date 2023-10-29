@@ -1,0 +1,72 @@
+class FloppyDisk {
+
+    field int x, y;
+
+    constructor FloppyDisk new(int initialX, int initialY) {
+        let x = initialX;
+        let y = initialY;
+        return this;
+    }
+
+    method int getY() {
+        return y;
+    }
+
+    method int getBottomY() {
+        return y + 32;
+    }
+
+    method void flap() {
+        let y = Math.max(0, y - 30); // Move the bird up
+        return;
+    }
+
+    method void update() { 
+        var char key;
+        if (key = 0) {
+            let key = Keyboard.keyPressed();
+        }
+        let y = y + 1; // Move the bird down
+
+        if (key = 32) {
+            let key = Keyboard.keyPressed();
+            if (key = 0) { do flap(); }
+        }
+        return;
+    }
+
+    method void draw() {
+        var int location;
+        let location = ScreenHelper.getScreenLocation(x, y);
+        do FloppyDisk.drawDisk(location);
+        return;
+    }
+    
+    function void drawDisk(int location) {
+        var int memAddress;
+        let memAddress = 16384+location;
+        do Memory.poke(memAddress+0, 16383);
+        do Memory.poke(memAddress+32, 24591);
+        do Memory.poke(memAddress+64, -6641);
+        do Memory.poke(memAddress+96, -6641);
+        do Memory.poke(memAddress+128, -6641);
+        do Memory.poke(memAddress+160, -8177);
+        do Memory.poke(memAddress+192, -1);
+        do Memory.poke(memAddress+224, -1);
+        do Memory.poke(memAddress+256, -16381);
+        do Memory.poke(memAddress+288, -16381);
+        do Memory.poke(memAddress+320, -16381);
+        do Memory.poke(memAddress+352, -16381);
+        do Memory.poke(memAddress+384, -16381);
+        do Memory.poke(memAddress+416, -16381);
+        do Memory.poke(memAddress+448, -16381);
+        do Memory.poke(memAddress+480, -1);
+        return;
+    }
+
+    method void _lose() {
+        let y = 0;
+        return;
+    }
+
+}

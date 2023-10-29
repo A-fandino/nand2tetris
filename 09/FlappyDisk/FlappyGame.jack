@@ -1,51 +1,24 @@
 class FlappyGame {
 
     field int score;
-    field int highScore;
-    field int x, y;
+    field int highestScore;
+    field FloppyDisk disk;
 
     constructor FlappyGame new() {
         let score = 0;
-        let highScore = 500; // Arbitrary value
-        let y = 100;
-        let x = 240;
+        let highestScore = 500; // Arbitrary value
+        let disk = FloppyDisk.new(0, 0);
         return this;
     }
 
-    method void flap() {
-        let y = Math.max(0, y - 30); // Move the bird up
-        return;
-    }
+
     
     method void draw() {
-        var int location;
         do Screen.clearScreen();
-        let location = ScreenHelper.GetScreenLocation(x, y);
-        do drawFloppy(location);
+        do disk.draw();
         return;
     } 
 
-    method void drawFloppy(int location) {
-    var int memAddress;
-	let memAddress = 16384+location;
-	do Memory.poke(memAddress+0, 16383);
-	do Memory.poke(memAddress+32, 24591);
-	do Memory.poke(memAddress+64, -6641);
-	do Memory.poke(memAddress+96, -6641);
-	do Memory.poke(memAddress+128, -6641);
-	do Memory.poke(memAddress+160, -8177);
-	do Memory.poke(memAddress+192, -1);
-	do Memory.poke(memAddress+224, -1);
-	do Memory.poke(memAddress+256, -16381);
-	do Memory.poke(memAddress+288, -16381);
-	do Memory.poke(memAddress+320, -16381);
-	do Memory.poke(memAddress+352, -16381);
-	do Memory.poke(memAddress+384, -16381);
-	do Memory.poke(memAddress+416, -16381);
-	do Memory.poke(memAddress+448, -16381);
-	do Memory.poke(memAddress+480, -1);
-	return;
-}
 
     method void dispose() {
         do Memory.deAlloc(this);
@@ -53,28 +26,14 @@ class FlappyGame {
     }
 
     method void run() {
-        var char key;
-
         while (true) {
-            if (key = 0) {
-                let key = Keyboard.keyPressed();
-            }
             let score = score + 1;
-            let y = y + 1; // Move the bird down
-
+            if (score > highestScore) { let highestScore = score; }
+            do disk.update();
             do draw();
-
-            if (key = 32) {
-                let key = Keyboard.keyPressed();
-                if (key = 0) {
-                    do flap();
-                }
-            }
-            if (y > 500) {
-                return;
-            }
+            if (disk.getBottomY() > 400) { do disk._lose(); }
             do Sys.wait(15);
         }
-    return;
+        return;
     }
 }

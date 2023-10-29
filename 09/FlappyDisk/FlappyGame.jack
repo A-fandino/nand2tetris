@@ -31,7 +31,7 @@ class FlappyGame {
             if (score > highestScore) { let highestScore = score; }
             do disk.update();
             do draw();
-            if (disk.getBottomY() > 400) { do disk._lose(); }
+            if (disk.getBottomY() > 230) { do disk._lose(); }
             do Sys.wait(15);
         }
         return;

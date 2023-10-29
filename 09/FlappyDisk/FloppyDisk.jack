@@ -1,6 +1,8 @@
 class FloppyDisk {
 
     field int x, y;
+    field char key;
+
 
     constructor FloppyDisk new(int initialX, int initialY) {
         let x = initialX;
@@ -22,7 +24,6 @@ class FloppyDisk {
     }
 
     method void update() { 
-        var char key;
         if (key = 0) {
             let key = Keyboard.keyPressed();
         }

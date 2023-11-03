@@ -3,37 +3,56 @@ class FlappyGame {
     field int score;
     field int highestScore;
     field FloppyDisk disk;
+    field int groundLevel;
+    field PseudoRandom random;
 
     constructor FlappyGame new() {
         let score = 0;
         let highestScore = 500; // Arbitrary value
-        let disk = FloppyDisk.new(0, 0);
+        let groundLevel = 240;
+        let disk = FloppyDisk.new(256, 128);
+        let random = PseudoRandom.new(50);
+        do drawGround();
         return this;
     }
-
-
     
     method void draw() {
-        do Screen.clearScreen();
+        do clearPlayScreen();
         do disk.draw();
         return;
     } 
 
+    method void clearPlayScreen() {
+        do Screen.setColor(false);
+        do Screen.drawRectangle(0,10, 511, groundLevel);
+        return;
+    }
 
     method void dispose() {
         do Memory.deAlloc(this);
         return;
     }
 
-    method void run() {
+    method void drawGround() {
+        do Screen.setColor(true);
+        do Screen.drawRectangle(32,groundLevel, 511, 255);
+        return;
+    }
+
+    method boolean run() {
         while (true) {
             let score = score + 1;
             if (score > highestScore) { let highestScore = score; }
+            if (score > 9998) {
+                return true;
+            }
+            do Output.moveCursor(22,0);
+            do Output.printInt(score);
             do disk.update();
             do draw();
-            if (disk.getBottomY() > 230) { do disk._lose(); }
+            if (disk.getBottomY() > groundLevel) { return false; }
             do Sys.wait(15);
         }
-        return;
+        return false;
     }
 }

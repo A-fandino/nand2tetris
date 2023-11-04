@@ -5,12 +5,14 @@ class FlappyGame {
     field int highestScore;
     field FloppyDisk disk;
     field int groundLevel;
+    field Obstacle obstacle;
 
     constructor FlappyGame new(String name) {
         let score = 0;
         let groundLevel = 240;
         let disk = FloppyDisk.new(256, 128);
         let playerName = name;
+        let obstacle = Obstacle.new(511);
         do drawGround();
         return this;
     }
@@ -28,6 +30,7 @@ class FlappyGame {
     }
 
     method void dispose() {
+        do disk.dispose();
         do Memory.deAlloc(this);
         return;
     }
@@ -50,15 +53,26 @@ class FlappyGame {
         return;
     }
 
-    method boolean run() {
-        var Obstacle obstacle;
-        let obstacle = Obstacle.new(200);
 
+    method void run() {
+        var boolean result;
+        let result = mainLoop();
+        if (result) {
+            do Output.moveCursor(22,0);
+            do Output.printString(playerName);
+            do Output.printString(" wins!");
+        } else {
+            do Output.moveCursor(22,0);
+            do Output.printString(playerName);
+            do Output.printString(" loses!");
+        }
+        return;
+    }
+
+    method boolean mainLoop() {
         while (true) {
             let score = score + 1;
-            if (score > 9999) {
-                return true;
-            }
+            if (score > 10) { return true; }
             do printScore();
             do disk.update();
 
@@ -74,4 +88,6 @@ class FlappyGame {
         }
         return false;
     }
+
+    
 }

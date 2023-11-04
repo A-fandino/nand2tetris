@@ -7,16 +7,8 @@ class Main {
         let name = Main.askName();
         do PseudoRandom.setSeed(name.intValue());
         let game = FlappyGame.new(name);
-        let result = game.run();
+        do game.run();
         do game.dispose();
-
-        do Sys.wait(1000);
-        do Screen.clearScreen();
-        if (result) {
-            do Output.printString("You won!");
-        } else {
-            do Output.printString("You lost!");
-        }
         return;
     }
 

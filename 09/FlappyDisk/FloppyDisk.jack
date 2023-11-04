@@ -72,8 +72,8 @@ class FloppyDisk {
         return;
     }
 
-    method void _lose() {
-        let y = 0;
+    method void dispose() {
+        do Memory.deAlloc(this);
         return;
     }
 

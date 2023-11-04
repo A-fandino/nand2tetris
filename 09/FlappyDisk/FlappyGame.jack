@@ -107,8 +107,9 @@ class FlappyGame {
             do printScore();
 
             // Decide if we need to reset the game
-            if ((disk.getY2() > groundLevel) | 
-                obstacle.collidesWith(disk.getX(), disk.getY(), disk.getX2(), disk.getY2())) {
+            if ((disk.getY2() > groundLevel) | // disk hit the ground 
+                obstacle.collidesWith(disk.getX(), disk.getY(), disk.getX2(), disk.getY2()) // disk hit the obstacle
+             ) {
                 do resetGame();
             }
 

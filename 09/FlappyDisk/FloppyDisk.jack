@@ -10,11 +10,19 @@ class FloppyDisk {
         return this;
     }
 
+    method int getX() {
+        return x;
+    }
+
+    method int getX2() {
+        return x + 16;
+    }
+
     method int getY() {
         return y;
     }
 
-    method int getBottomY() {
+    method int getY2() {
         return y + 16;
     }
 

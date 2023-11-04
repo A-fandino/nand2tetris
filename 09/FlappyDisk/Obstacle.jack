@@ -1,0 +1,50 @@
+class Obstacle {
+
+    field int x, y, separation;
+    static int width; 
+    constructor Obstacle new(int initialX) {
+        if (width = 0) {
+            let width = 50;
+        }
+        do reset();
+        if (~(initialX = 0)) {
+            let x = initialX;
+        }
+        return this;
+    }
+
+    method void draw() {
+        var int bottomY, maxX;
+        let bottomY = y + separation;
+        let maxX = Math.min(x + width, 511);
+        do Output.moveCursor(0, 0);
+        do Output.printInt(y);
+
+        // Draw the obstacle
+        do Screen.setColor(true);
+        do Screen.drawRectangle(x, 0, maxX, y);
+        do Screen.drawRectangle(x, bottomY, maxX, 255);
+
+        return;
+    }
+
+    method void reset() {
+        let x = 511;
+        let y = PseudoRandom.randomIntRanged(20, 120);
+
+        //FIXME: Hack to make sure random Function doesn't return negative numbers
+        while (y < 20) {
+            let y = PseudoRandom.randomIntRanged(20, 120);
+        }
+        let separation = 50;
+        return;
+    }
+
+    method void move() {
+        let x = x - 5;
+        if (x<1) {
+            do reset();
+        }
+        return;
+    }
+}

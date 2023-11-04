@@ -24,7 +24,7 @@ class FlappyGame {
 
     method void clearPlayScreen() {
         do Screen.setColor(false);
-        do Screen.drawRectangle(0,10, 511, groundLevel);
+        do Screen.drawRectangle(0,0, 511, groundLevel);
         return;
     }
 
@@ -39,17 +39,27 @@ class FlappyGame {
         return;
     }
 
+    method int getScore() {
+        return score;
+    }
+
     method boolean run() {
+        var Obstacle obstacle;
+        let obstacle = Obstacle.new(200);
         while (true) {
             let score = score + 1;
-            if (score > highestScore) { let highestScore = score; }
-            if (score > 9998) {
+            // if (score > highestScore) { let highestScore = score; }
+            if (score > 9999) {
                 return true;
             }
             do Output.moveCursor(22,0);
             do Output.printInt(score);
             do disk.update();
+
+            do obstacle.move();
+
             do draw();
+            do obstacle.draw();
             if (disk.getBottomY() > groundLevel) { return false; }
             do Sys.wait(15);
         }

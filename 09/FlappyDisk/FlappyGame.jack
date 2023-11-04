@@ -113,6 +113,7 @@ class FlappyGame {
                 do resetGame();
             }
 
+            //Increase the speed of the obstacle every 250 points
             if (PseudoRandom.modulo(score, 250) = 0) {
                 do obstacle.increaseSpeed();
             }
@@ -128,6 +129,4 @@ class FlappyGame {
         do obstacle.reset();
         return;
     }
-
-    
 }

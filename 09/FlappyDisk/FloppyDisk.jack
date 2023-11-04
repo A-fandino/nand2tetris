@@ -15,7 +15,7 @@ class FloppyDisk {
     }
 
     method int getBottomY() {
-        return y + 32;
+        return y + 16;
     }
 
     method void flap() {
@@ -26,13 +26,12 @@ class FloppyDisk {
     method void update() { 
         if (key = 0) {
             let key = Keyboard.keyPressed();
+            if (key = 32) {
+                 do flap(); 
+            }
         }
         let y = y + 1; // Move the bird down
-
-        if (key = 32) {
-            let key = Keyboard.keyPressed();
-            if (key = 0) { do flap(); }
-        }
+        let key = Keyboard.keyPressed();
         return;
     }
 

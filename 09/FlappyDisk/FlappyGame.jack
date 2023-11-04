@@ -76,6 +76,7 @@ class FlappyGame {
         if (result) {
             do Output.printString(playerName);
             do Output.printString(" wins!");
+            return;
         } 
         do Output.printString("Thanks for playing, ");
         do Output.printString(playerName);
@@ -111,8 +112,6 @@ class FlappyGame {
                 do resetGame();
             }
 
-            do Output.println();
-            do Output.printInt(PseudoRandom.modulo(score, 100));
             if (PseudoRandom.modulo(score, 250) = 0) {
                 do obstacle.increaseSpeed();
             }

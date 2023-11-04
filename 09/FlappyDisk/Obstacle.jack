@@ -1,6 +1,6 @@
 class Obstacle {
 
-    field int x, y, separation;
+    field int x, y, separation, speed;
     static int width; 
     constructor Obstacle new(int initialX) {
         if (width = 0) {
@@ -27,6 +27,12 @@ class Obstacle {
     }
 
     method void reset() {
+        let speed = 3;
+        do resetPosition();
+        return;
+    }
+
+    method void resetPosition() {
         let x = 511;
         let y = PseudoRandom.randomIntRanged(20, 120);
 
@@ -39,9 +45,9 @@ class Obstacle {
     }
 
     method void move() {
-        let x = x - 5;
+        let x = x - speed;
         if (x<1) {
-            do reset();
+            do resetPosition();
         }
         return;
     }
@@ -52,6 +58,11 @@ class Obstacle {
 
     method void dispose() {
         do Memory.deAlloc(this);
+        return;
+    }
+
+    method void increaseSpeed() {
+        let speed = speed + 1;
         return;
     }
 }

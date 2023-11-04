@@ -29,6 +29,17 @@ class FlappyGame {
         return;
     }
 
+    method void clearScreenAnimated() {
+        var int memAddress, limit;
+        let memAddress = 16384;
+        let limit = 16384 + 8192;
+        while (memAddress < limit) {
+            do Memory.poke(memAddress, 0);
+            let memAddress = memAddress + 1;
+        }
+        return;
+    }
+
     method void dispose() {
         do disk.dispose();
         do Memory.deAlloc(this);
@@ -46,47 +57,76 @@ class FlappyGame {
     }
 
     method void printScore() {
-        do Output.moveCursor(22,0);
+        do Output.moveCursor(1,1);
         do Output.printString(playerName);
         do Output.printChar(58);
         do Output.printInt(score);
         return;
     }
 
-
+    /**
+    * Run the game and show the results
+    */
     method void run() {
         var boolean result;
         let result = mainLoop();
+        do Sys.wait(500);
+        do clearScreenAnimated();
+        do Output.moveCursor(10,20);
         if (result) {
-            do Output.moveCursor(22,0);
             do Output.printString(playerName);
             do Output.printString(" wins!");
-        } else {
-            do Output.moveCursor(22,0);
-            do Output.printString(playerName);
-            do Output.printString(" loses!");
-        }
+        } 
+        do Output.printString("Thanks for playing, ");
+        do Output.printString(playerName);
+        do Output.printString("!");
+        do Output.moveCursor(11, 20);
+        do Output.printString("Your score was: ");
+        do Output.printInt(score);
         return;
     }
 
+    /**
+    * Main game loop
+    * @return true if the player won, false if the player quit
+    */
     method boolean mainLoop() {
-        while (true) {
+        var int key;
+        while (~(key = 81)) { //while not 'q' pressed
             let score = score + 1;
-            if (score > 5000) { return true; }
-            do printScore();
+            if (score > 1000) { return true; }
+            
+            //Update step
             do disk.update();
-
             do obstacle.move();
 
+            //Draw step
             do draw();
             do obstacle.draw();
-            if (obstacle.collidesWith(disk.getX(), disk.getY(), disk.getX2(), disk.getY2())) {
-                return false;
+            do printScore();
+
+            // Decide if we need to reset the game
+            if ((disk.getY2() > groundLevel) | 
+                obstacle.collidesWith(disk.getX(), disk.getY(), disk.getX2(), disk.getY2())) {
+                do resetGame();
             }
-            if (disk.getY2() > groundLevel) { return false; }
+
+            do Output.println();
+            do Output.printInt(PseudoRandom.modulo(score, 100));
+            if (PseudoRandom.modulo(score, 250) = 0) {
+                do obstacle.increaseSpeed();
+            }
+            let key = Keyboard.keyPressed();
             do Sys.wait(15);
         }
         return false;
+    }
+
+    method void resetGame() {
+        let score = 0;
+        do disk.reset();
+        do obstacle.reset();
+        return;
     }
 
     

@@ -1,13 +1,20 @@
 class FloppyDisk {
 
-    field int x, y;
+    field int x, y, initX, initY;
     field char key;
 
 
     constructor FloppyDisk new(int initialX, int initialY) {
-        let x = initialX;
-        let y = initialY;
+        let initX = initialX;
+        let initY = initialY;
+        do reset();
         return this;
+    }
+
+    method void reset() {
+        let x = initX;
+        let y = initY;
+        return;
     }
 
     method int getX() {

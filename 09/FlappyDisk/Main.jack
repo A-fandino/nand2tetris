@@ -1,9 +1,15 @@
 class Main {
     function void main() {
         var FlappyGame game;
+        var boolean result;
         let game = FlappyGame.new();
-        do game.run();
+        let result = game.run();
         do game.dispose();
+        if (result) {
+            do Output.printString("You won!");
+        } else {
+            do Output.printString("You lost!");
+        }
         return;
     }
 }

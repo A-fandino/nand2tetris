@@ -2,6 +2,7 @@ class Main {
     function void main() {
         var FlappyGame game;
         var boolean result;
+        do PseudoRandom.setSeed(50);
         let game = FlappyGame.new();
         let result = game.run();
         do game.dispose();

@@ -1,23 +1,28 @@
 class PseudoRandom {
 
-    field int seed;
+    static int seed;
 
-    constructor PseudoRandom new(int initialSeed) {
-        let seed = initialSeed;
-        return this;
+    // constructor PseudoRandom new(int initialSeed) {
+    //     let seed = initialSeed;
+    //     return this;
+    // }
+
+    function void setSeed(int newSeed) {
+        let seed = newSeed;
+        return;
     }
 
-    method int randomIntMax(int max) {
+    function int randomIntMax(int max) {
         let seed = PseudoRandom.modulo(seed*3+42, max);
         return seed;
     }
-    method int randomInt() {
-        return randomIntMax(16383);
+    function int randomInt() {
+        return PseudoRandom.randomIntMax(16383);
     }
 
-    method int randomIntRanged(int min, int max) {
+    function int randomIntRanged(int min, int max) {
         // return PseudoRandom.remap(randomInt(), 0, 16383, min, max);
-        return PseudoRandom.modulo(randomInt(), max-min) + min;
+        return PseudoRandom.modulo(PseudoRandom.randomInt(), max-min) + min;
     }
     //TODO: This should go into a Math class
     function int modulo(int number, int mod) {

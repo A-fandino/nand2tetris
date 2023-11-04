@@ -1,16 +1,29 @@
 class Main {
     function void main() {
+        var String name;
         var FlappyGame game;
         var boolean result;
-        do PseudoRandom.setSeed(50);
-        let game = FlappyGame.new();
+
+        let name = Main.askName();
+        do PseudoRandom.setSeed(name.intValue());
+        let game = FlappyGame.new(name);
         let result = game.run();
         do game.dispose();
+
+        do Sys.wait(1000);
+        do Screen.clearScreen();
         if (result) {
             do Output.printString("You won!");
         } else {
             do Output.printString("You lost!");
         }
         return;
+    }
+
+    function String askName() {
+        do Output.moveCursor(10, 20);
+        do Output.printString("What is your name?");
+        do Output.moveCursor(11, 20);
+        return Keyboard.readLine("->");
     }
 }

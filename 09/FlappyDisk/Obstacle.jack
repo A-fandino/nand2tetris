@@ -17,8 +17,6 @@ class Obstacle {
         var int bottomY, maxX;
         let bottomY = y + separation;
         let maxX = Math.min(x + width, 511);
-        do Output.moveCursor(0, 0);
-        do Output.printInt(y);
 
         // Draw the obstacle
         do Screen.setColor(true);

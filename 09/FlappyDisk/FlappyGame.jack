@@ -1,17 +1,16 @@
 class FlappyGame {
 
     field int score;
+    field String playerName;
     field int highestScore;
     field FloppyDisk disk;
     field int groundLevel;
-    // field PseudoRandom random;
 
-    constructor FlappyGame new() {
+    constructor FlappyGame new(String name) {
         let score = 0;
-        // let highestScore = 500; // Arbitrary value
         let groundLevel = 240;
         let disk = FloppyDisk.new(256, 128);
-        // let random = PseudoRandom.new(50);
+        let playerName = name;
         do drawGround();
         return this;
     }
@@ -43,17 +42,24 @@ class FlappyGame {
         return score;
     }
 
+    method void printScore() {
+        do Output.moveCursor(22,0);
+        do Output.printString(playerName);
+        do Output.printChar(58);
+        do Output.printInt(score);
+        return;
+    }
+
     method boolean run() {
         var Obstacle obstacle;
         let obstacle = Obstacle.new(200);
+
         while (true) {
             let score = score + 1;
-            // if (score > highestScore) { let highestScore = score; }
             if (score > 9999) {
                 return true;
             }
-            do Output.moveCursor(22,0);
-            do Output.printInt(score);
+            do printScore();
             do disk.update();
 
             do obstacle.move();

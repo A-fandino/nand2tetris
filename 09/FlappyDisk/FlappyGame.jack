@@ -72,7 +72,7 @@ class FlappyGame {
     method boolean mainLoop() {
         while (true) {
             let score = score + 1;
-            if (score > 10) { return true; }
+            if (score > 5000) { return true; }
             do printScore();
             do disk.update();
 

@@ -115,7 +115,7 @@ class FlappyGame {
             }
 
             //Increase the speed of the obstacle every 250 points
-            if (PseudoRandom.modulo(score, 250) = 0) {
+            if (MathHelper.modulo(score, 250) = 0) {
                 do obstacle.increaseSpeed();
             }
             let key = Keyboard.keyPressed();

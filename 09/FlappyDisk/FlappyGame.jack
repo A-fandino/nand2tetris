@@ -112,8 +112,8 @@ class FlappyGame {
     method boolean mainLoop() {
         var int key;
         while (~(key = 81)) { //while not 'q' pressed
-            let score = score + 1;
             if (score > 1000) { return true; }
+            let score = score + 1;
             
             //Update step
             do disk.update();

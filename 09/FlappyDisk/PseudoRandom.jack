@@ -16,7 +16,6 @@ class PseudoRandom {
     }
 
     function int randomIntRanged(int min, int max) {
-        // return PseudoRandom.remap(randomInt(), 0, 16383, min, max);
         return MathHelper.modulo(PseudoRandom.randomInt(), max-min) + min;
     }
 }

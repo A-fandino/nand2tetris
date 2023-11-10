@@ -1,9 +1,13 @@
 class Main {
     function void main() {
+        var String name;
         var FlappyGame game;
         var boolean result;
-        let game = FlappyGame.new();
-        let result = game.run();
+
+        let name = Main.askName();
+        do PseudoRandom.setSeed(name.intValue());
+        let game = FlappyGame.new(name);
+        do game.run();
         do game.dispose();
         if (result) {
             do Output.printString("You won!");
@@ -11,5 +15,12 @@ class Main {
             do Output.printString("You lost!");
         }
         return;
+    }
+
+    function String askName() {
+        do Output.moveCursor(10, 20);
+        do Output.printString("What is your name?");
+        do Output.moveCursor(11, 20);
+        return Keyboard.readLine("->");
     }
 }

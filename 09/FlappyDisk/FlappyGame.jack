@@ -1,17 +1,20 @@
 class FlappyGame {
 
     field int score;
+    field String playerName;
     field int highestScore;
     field FloppyDisk disk;
     field int groundLevel;
-    field PseudoRandom random;
+    field Obstacle obstacle;
+    field Array topScores;
 
-    constructor FlappyGame new() {
+    constructor FlappyGame new(String name) {
         let score = 0;
-        let highestScore = 500; // Arbitrary value
+        let topScores = Array.new(3);
         let groundLevel = 240;
         let disk = FloppyDisk.new(256, 128);
-        let random = PseudoRandom.new(50);
+        let playerName = name;
+        let obstacle = Obstacle.new(511);
         do drawGround();
         return this;
     }
@@ -24,35 +27,148 @@ class FlappyGame {
 
     method void clearPlayScreen() {
         do Screen.setColor(false);
-        do Screen.drawRectangle(0,10, 511, groundLevel);
+        do Screen.drawRectangle(0,0, 511, groundLevel);
+        return;
+    }
+
+    method void clearScreenAnimated() {
+        var int memAddress, limit;
+        let memAddress = 16384;
+        let limit = 16384 + 8192;
+        while (memAddress < limit) {
+            do Memory.poke(memAddress, 0);
+            let memAddress = memAddress + 1;
+        }
         return;
     }
 
     method void dispose() {
+        do disk.dispose();
+        do obstacle.dispose();
+        do topScores.dispose();
         do Memory.deAlloc(this);
         return;
     }
 
     method void drawGround() {
         do Screen.setColor(true);
-        do Screen.drawRectangle(32,groundLevel, 511, 255);
+        do Screen.drawRectangle(0,groundLevel, 511, 255);
         return;
     }
 
-    method boolean run() {
-        while (true) {
-            let score = score + 1;
-            if (score > highestScore) { let highestScore = score; }
-            if (score > 9998) {
-                return true;
-            }
-            do Output.moveCursor(22,0);
+    method int getScore() {
+        return score;
+    }
+
+    method void printScore() {
+        do Output.moveCursor(1,1);
+        do Output.printString(playerName);
+        do Output.printChar(58);
+        do Output.printInt(score);
+        return;
+    }
+
+    /**
+    * Run the game and show the results
+    */
+    method void run() {
+        var boolean result;
+        var int i;
+        let result = mainLoop();
+        do setHighestScores();
+        do Sys.wait(500);
+        do clearScreenAnimated();
+        if (result) {
+            do Output.moveCursor(10,27);
+            do Output.printString(playerName);
+            do Output.printString(" wins!");
+        } else {
+            do Output.moveCursor(10,20);
+            do Output.printString("Thanks for playing, ");
+            do Output.printString(playerName);
+            do Output.printString("!");
+            do Output.moveCursor(11, 20);
+            do Output.printString("Your score was: ");
             do Output.printInt(score);
+        }
+        do Output.moveCursor(13, 20);
+        do Output.printString("Top scores:");
+        let i = 0;
+        do MathHelper.sort(topScores, 3, true);
+        while (i < 3) {
+            do Output.printInt(topScores[i]);
+            let i = i + 1;
+            if (i < 3) {
+                do Output.printString(",");
+            }
+        }
+        return false;
+    }
+
+    /**
+    * Main game loop
+    * @return true if the player won, false if the player quit
+    */
+    method boolean mainLoop() {
+        var int key;
+        while (~(key = 81)) { //while not 'q' pressed
+            if (score > 1000) { return true; }
+            let score = score + 1;
+            
+            //Update step
             do disk.update();
+            do obstacle.move();
+
+            //Draw step
             do draw();
-            if (disk.getBottomY() > groundLevel) { return false; }
+            do obstacle.draw();
+            do printScore();
+
+            // Decide if we need to reset the game
+            if ((disk.getY2() > groundLevel) | // disk hit the ground 
+                obstacle.collidesWith(disk.getX(), disk.getY(), disk.getX2(), disk.getY2()) // disk hit the obstacle
+             ) {
+                do resetGame();
+            }
+
+            //Increase the speed of the obstacle every 250 points
+            if (MathHelper.modulo(score, 250) = 0) {
+                do obstacle.increaseSpeed();
+            }
+            let key = Keyboard.keyPressed();
             do Sys.wait(15);
         }
         return false;
+    }
+    method void setHighestScores() {
+        var int i;
+        if (score = 0) { return; }
+        let i = 0;
+        // Insert if there is an empty slot (0)
+        while (i < 3) {
+            if (topScores[i] = 0) {
+                let topScores[i] = score;
+                return;
+            }
+            let i = i + 1;
+        }
+
+        //Actually check if the score is higher than any of the top scores
+        let i = 0;
+        while (i < 3) {
+            if (score > topScores[i]) {
+                let topScores[i] = score;
+                return;
+            }
+            let i = i + 1;
+        }
+        return;
+    }
+    method void resetGame() {
+        do setHighestScores();
+        let score = 0;
+        do disk.reset();
+        do obstacle.reset();
+        return;
     }
 }

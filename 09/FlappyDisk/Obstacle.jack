@@ -1,0 +1,68 @@
+class Obstacle {
+
+    field int x, y, separation, speed;
+    static int width; 
+    constructor Obstacle new(int initialX) {
+        if (width = 0) {
+            let width = 50;
+        }
+        do reset();
+        if (~(initialX = 0)) {
+            let x = initialX;
+        }
+        return this;
+    }
+
+    method void draw() {
+        var int bottomY, maxX;
+        let bottomY = y + separation;
+        let maxX = Math.min(x + width, 511);
+
+        // Draw the obstacle
+        do Screen.setColor(true);
+        do Screen.drawRectangle(x, 0, maxX, y);
+        do Screen.drawRectangle(x, bottomY, maxX, 255);
+
+        return;
+    }
+
+    method void reset() {
+        let speed = 3;
+        do resetPosition();
+        return;
+    }
+
+    method void resetPosition() {
+        let x = 511;
+        let y = PseudoRandom.randomIntRanged(20, 120);
+
+        //FIXME: Hack to make sure random Function doesn't return negative numbers
+        while (y < 20) {
+            let y = PseudoRandom.randomIntRanged(20, 120);
+        }
+        let separation = 50;
+        return;
+    }
+
+    method void move() {
+        let x = x - speed;
+        if (x<1) {
+            do resetPosition();
+        }
+        return;
+    }
+
+    method boolean collidesWith(int x1, int y1, int x2, int y2) {
+        return ((x2 > x) & (x1 < (x + width)))  & ((y1 < y) | (y2 > (y + separation)));
+    }
+
+    method void dispose() {
+        do Memory.deAlloc(this);
+        return;
+    }
+
+    method void increaseSpeed() {
+        let speed = speed + 1;
+        return;
+    }
+}

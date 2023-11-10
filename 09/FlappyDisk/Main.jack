@@ -9,11 +9,6 @@ class Main {
         let game = FlappyGame.new(name);
         do game.run();
         do game.dispose();
-        if (result) {
-            do Output.printString("You won!");
-        } else {
-            do Output.printString("You lost!");
-        }
         return;
     }
 

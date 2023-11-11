@@ -35,4 +35,8 @@ KEYWORDS = {
     "return",
 }
 
+WHITE_SPACE = {" ", "\t", "\n"}
+
 MAX_INT = 32767
+
+STRING_DELIMITER = '"'

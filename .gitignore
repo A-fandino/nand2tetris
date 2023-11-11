@@ -2,3 +2,6 @@ __pycache__/
 Test.asm
 Test.vm
 09/**/*.vm
+10/**/*.vm
+10/JackAnalyzer/*.xml
+10/JackAnalyzer/*.jack

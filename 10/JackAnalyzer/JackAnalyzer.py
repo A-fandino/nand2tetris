@@ -1,5 +1,9 @@
+from Tokenizer import JackTokenizer
+
+
 def main():
-    pass
+    tokenizer = JackTokenizer("Test.jack")
+    tokenizer.compute_tokens()
 
 
 if __name__ == "__main__":

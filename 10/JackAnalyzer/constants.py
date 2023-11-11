@@ -15,7 +15,7 @@ OTHER_SYMBOLS = {
 SYMBOL = {*OPERATORS, *UNARY_OPERATORS, *OTHER_SYMBOLS}
 
 KEYWORD_CONST = {"true", "false", "null", "this"}
-KEYWORDS = {
+GRAMMATIC_KEYWORDS = {
     "class",
     "constructor",
     "function",
@@ -34,6 +34,8 @@ KEYWORDS = {
     "while",
     "return",
 }
+
+KEYWORDS = {*KEYWORD_CONST, *GRAMMATIC_KEYWORDS}
 
 WHITE_SPACE = {" ", "\t", "\n"}
 

@@ -42,3 +42,10 @@ WHITE_SPACE = {" ", "\t", "\n"}
 MAX_INT = 32767
 
 STRING_DELIMITER = '"'
+
+SPECIAL_CHARACTERS = {
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+}

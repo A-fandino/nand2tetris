@@ -1,4 +1,11 @@
-from constants import KEYWORDS, MAX_INT, STRING_DELIMITER, SYMBOL, WHITE_SPACE
+from constants import (
+    KEYWORDS,
+    MAX_INT,
+    SPECIAL_CHARACTERS,
+    STRING_DELIMITER,
+    SYMBOL,
+    WHITE_SPACE,
+)
 import re
 
 
@@ -79,14 +86,14 @@ class JackTokenizer:
 
     def tokenize_string(self):
         while (char := self.next_char()) not in (STRING_DELIMITER, None):
-            self.current_token += char
+            self.add_to_token(char)
         if char is None:
             self.panic("String not closed")
 
     def tokenize_int(self):
         self.prev_char()
         while (char := self.next_char()) is not None and char.isdigit():
-            self.current_token += char
+            self.add_to_token(char)
         if char is not None and re.match("[a-zA-Z]", char):
             self.panic(f"Invalid character {char} after int constant")
         if int(self.current_token) > MAX_INT:
@@ -94,9 +101,9 @@ class JackTokenizer:
         self.prev_char()
 
     def tokenize_identifier(self):
-        self.current_token += self.current_char
+        self.add_to_token(self.current_char)
         while (char := self.next_char()) is not None and re.match("[a-zA-Z0-9_]", char):
-            self.current_token += char
+            self.add_to_token(char)
         self.prev_char()
 
     def skip_comment(self):
@@ -121,7 +128,11 @@ class JackTokenizer:
         return char in WHITE_SPACE
 
     def add_token(self, type: str, token: str):
+        token = "".join([SPECIAL_CHARACTERS.get(char, char) for char in token])
         self.tokens += f"<{type}> {token} </{type}>\n"
+
+    def add_to_token(self, char: str):
+        self.current_token += char
 
     def add_current_token(self, type: str):
         self.add_token(type, self.current_token)

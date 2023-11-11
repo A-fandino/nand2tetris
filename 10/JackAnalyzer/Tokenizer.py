@@ -67,6 +67,14 @@ class JackTokenizer:
         if int(self.current_token) > MAX_INT:
             self.panic("Int constant too large")
 
+    def tokenize_identifier(self):
+        self.prev_char()
+        while (char := self.next_char()) is not None and not self.is_whitespace(char):
+            if not re.match("[a-zA-Z][0-9]_"):
+                self.panic(f"Invalid character {char} found in identifier")
+            self.current_token += char
+        # TODO:
+
     def is_whitespace(self, char: str):
         return char in WHITE_SPACE
 

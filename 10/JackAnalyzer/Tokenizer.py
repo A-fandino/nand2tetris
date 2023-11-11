@@ -121,7 +121,7 @@ class JackTokenizer:
         return char in WHITE_SPACE
 
     def add_token(self, type: str, token: str):
-        self.tokens += f"\t<{type}>{token}</{type}>\n"
+        self.tokens += f"<{type}> {token} </{type}>\n"
 
     def add_current_token(self, type: str):
         self.add_token(type, self.current_token)

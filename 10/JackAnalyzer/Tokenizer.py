@@ -1,4 +1,5 @@
-from constants import STRING_DELIMITER, WHITE_SPACE
+from constants import MAX_INT, STRING_DELIMITER, SYMBOL, WHITE_SPACE
+import re
 
 
 class JackTokenizer:
@@ -26,6 +27,11 @@ class JackTokenizer:
             return self.file_content[curr_pointer]
         return None
 
+    def prev_char(self):
+        self.pointer -= 1
+        return self.current_char
+
+    @property
     def current_char(self):
         return self.file_content[self.pointer]
 
@@ -40,6 +46,10 @@ class JackTokenizer:
                 self.tokenize_string()
                 self.add_current_token("stringConstant")
                 continue
+            if char.isdigit():
+                self.tokenize_int()
+                self.add_current_token("integerConstant")
+                continue
         self.end()
 
     def tokenize_string(self):
@@ -47,6 +57,15 @@ class JackTokenizer:
             self.current_token += char
         if char is None:
             self.panic("String not closed")
+
+    def tokenize_int(self):
+        self.prev_char()
+        while (char := self.next_char()) is not None and char.isdigit():
+            self.current_token += char
+        if char is not None and re.match("[a-zA-Z]", char):
+            self.panic(f"Invalid character {char} after int constant")
+        if int(self.current_token) > MAX_INT:
+            self.panic("Int constant too large")
 
     def is_whitespace(self, char: str):
         return char in WHITE_SPACE

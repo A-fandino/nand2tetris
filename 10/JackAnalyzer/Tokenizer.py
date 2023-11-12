@@ -10,9 +10,9 @@ import re
 
 
 class JackTokenizer:
-    input_file: str = ""
     file_content: str
-    tokens: str = "<tokens>\n"
+    # tokens: str = "<tokens>\n"
+    tokens: list = []
     pointer: int = -1
     current_token: str = ""
 
@@ -21,7 +21,6 @@ class JackTokenizer:
     lineChar = 1
 
     def __init__(self, input_file: str):
-        self.input_file = input_file
         with open(input_file, "r") as f:
             self.file_content = f.read()
 
@@ -128,8 +127,7 @@ class JackTokenizer:
         return char in WHITE_SPACE
 
     def add_token(self, type: str, token: str):
-        token = "".join([SPECIAL_CHARACTERS.get(char, char) for char in token])
-        self.tokens += f"<{type}> {token} </{type}>\n"
+        self.tokens.append({"type": type, "token": token})
 
     def add_to_token(self, char: str):
         self.current_token += char
@@ -139,14 +137,11 @@ class JackTokenizer:
         self.current_token = ""
 
     def end(self):
-        self.tokens += "</tokens>\n"
-        filename = self.input_file.split(".")[0] + "T.xml"
-        with open(filename, "w") as f:
-            f.write(self.tokens)
+        pass
 
     def reset(self):
         self.pointer = -1
-        self.tokens = "<tokens>\n"
+        self.tokens = []
         self.current_token = ""
         self.line = 1
         self.lineChar = 1
@@ -157,3 +152,15 @@ class JackTokenizer:
 
     def panic(self, message: str):
         raise Exception(f"{message} at line {self.line} (char: {self.lineChar})")
+
+    def generate_xml_file(self, filename):
+        xml_output = "<tokens>\n"
+        for token in self.tokens:
+            type = token["type"]
+            sane_token = "".join(
+                [SPECIAL_CHARACTERS.get(char, char) for char in token["token"]]
+            )
+            xml_output += f"<{type}> {sane_token} </{type}>\n"
+        xml_output += "</tokens>\n"
+        with open(filename, "w") as f:
+            f.write(xml_output)

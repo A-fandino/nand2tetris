@@ -15,7 +15,7 @@ class JackTokenizer:
     tokens: list = []
     pointer: int = -1
     current_token: str = ""
-
+    token_pointer: int = -1
     # Could be calculated (maybe expensive)
     line = 1
     lineChar = 1
@@ -23,6 +23,16 @@ class JackTokenizer:
     def __init__(self, input_file: str):
         with open(input_file, "r") as f:
             self.file_content = f.read()
+
+    def advance(self):
+        self.token_pointer += 1
+        return self.get_token()
+
+    def get_token(self):
+        return self.tokens[self.token_pointer]
+
+    def has_more_tokens(self):
+        return self.token_pointer < len(self.tokens) - 1
 
     def next_char(self, advance=True):
         if self.pointer < (len(self.file_content)):
@@ -127,7 +137,7 @@ class JackTokenizer:
         return char in WHITE_SPACE
 
     def add_token(self, type: str, token: str):
-        self.tokens.append({"type": type, "token": token})
+        self.tokens.append({"type": type, "token": token, "line": self.line})
 
     def add_to_token(self, char: str):
         self.current_token += char

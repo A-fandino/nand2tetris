@@ -1,4 +1,6 @@
 import os
+
+from CompilationEngine import CompilationEngine
 from Tokenizer import JackTokenizer
 from argparse import ArgumentParser
 
@@ -27,13 +29,17 @@ def get_input_files():
     return source_files
 
 
-def get_output_file(file: str):
+def get_output_file(file: str, tokenized: bool = False):
     filename, _ = os.path.splitext(os.path.basename(file))
     path = filename
     if args.in_origin:
         dirname = os.path.dirname(file)
         path = os.path.join(dirname, filename)
-    return path + "T.xml"
+
+    ext = ".xml"
+    if tokenized:
+        ext = "T.xml"
+    return path + ext
 
 
 def main():
@@ -41,7 +47,10 @@ def main():
     for file in input_files:
         tokenizer = JackTokenizer(file)
         tokenizer.compute_tokens()
-        tokenizer.generate_xml_file(get_output_file(file))
+        tokenizer.generate_xml_file(get_output_file(file, True))
+
+        engine = CompilationEngine(tokenizer, get_output_file(file))
+        engine.compile()
 
 
 if __name__ == "__main__":

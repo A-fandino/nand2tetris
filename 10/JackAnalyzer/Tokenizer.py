@@ -1,3 +1,4 @@
+from __future__ import annotations
 from constants import (
     KEYWORDS,
     MAX_INT,
@@ -16,7 +17,7 @@ class JackTokenizer:
     pointer: int = -1
     current_token: str = ""
     token_pointer: int = -1
-    # Could be calculated (maybe expensive)
+    # Could be calculated (may be expensive)
     line = 1
     lineChar = 1
 
@@ -25,11 +26,16 @@ class JackTokenizer:
             self.file_content = f.read()
 
     def advance(self) -> dict:
-        self.token_pointer += 1
+        if self.token_pointer < len(self.tokens):
+            self.token_pointer += 1
         return self.get_token()
 
     def get_token(self):
-        return self.tokens[self.token_pointer]
+        return (
+            self.tokens[self.token_pointer]
+            if len(self.tokens) > self.token_pointer
+            else {"token": "EOF", "line": self.line, "type": "EOF"}
+        )
 
     def has_more_tokens(self):
         return self.token_pointer < len(self.tokens) - 1

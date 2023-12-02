@@ -40,13 +40,15 @@ class CompilationEngine:
         advance=True,
         add_tag=True,
     ):
+        token = self.tokenizer.get_token()
+        if token.get("type") == "EOF":
+            self.panic(f"Unexpected end of file")
         if token_values is not None:
             if not isinstance(token_values, list):
                 token_values = [token_values]
             token_values: list[str] = [
                 val.value if isinstance(val, Enum) else val for val in token_values
             ]
-        token = self.tokenizer.get_token()
         type_matches = token_type is None or token.get("type") == token_type
         value_match = token_values is None or token.get("token") in token_values
         if not (type_matches and value_match):
@@ -81,6 +83,7 @@ class CompilationEngine:
     def compile(self):
         self.tokenizer.advance()
         self._compileClass()
+        assert self.tokenizer.get_token()["type"] == "EOF"
 
     @wrap("class")
     def _compileClass(self):
@@ -97,6 +100,7 @@ class CompilationEngine:
             Keyword.FUNCTION.value,
         ):
             self._compileSubroutine()
+
         self.expect(Symbol.RIGHT_CURLY_BRACKET)
 
     def _compileClassVarDec(self):

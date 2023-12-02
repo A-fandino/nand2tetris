@@ -51,6 +51,7 @@ def main():
 
         engine = CompilationEngine(tokenizer, get_output_file(file))
         engine.compile()
+        engine.generate_file()
 
 
 if __name__ == "__main__":

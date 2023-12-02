@@ -1,48 +1,134 @@
+from __future__ import annotations
+from enum import Enum
 from Tokenizer import JackTokenizer
+from constants import SUBROUTINE_KEYWORDS, TYPE_KEYWORDS, Symbol, Keyword
+
+
+def wrap(tag: str):
+    def decorator(func: function):
+        def wrapper(self: CompilationEngine, *args, **kwargs):
+            self.open_tag(tag)
+            rtrn_value = func(self, *args, **kwargs)
+            self.close_tag(tag)
+            return rtrn_value
+
+        return wrapper
+
+    return decorator
 
 
 class CompilationEngine:
-    def __init__(self, tokenizer: JackTokenizer, output_file):
+    content: str = ""
+    tokenizer: JackTokenizer = None
+    output_file: str = None
+    indent = 0
+
+    def __init__(self, tokenizer: JackTokenizer, output_file: str):
         self.tokenizer = tokenizer
         self.output_file = output_file
+        self.content = ""
+        self.indent = 0
 
-    def expect(self, token_value, token_type: str = None, advance=True):
-        print("expecting", token_value)
+    def panic(self, message: str):
+        line = self.tokenizer.get_token()["line"]
+        raise Exception(f"{message} at line {line}")
+
+    def expect(
+        self,
+        token_values: str | Enum | list[str | Enum] | None = None,
+        token_type: str = None,
+        advance=True,
+        add_tag=True,
+    ):
+        if token_values is not None:
+            if not isinstance(token_values, list):
+                token_values = [token_values]
+            token_values: list[str] = [
+                val.value if isinstance(val, Enum) else val for val in token_values
+            ]
         token = self.tokenizer.get_token()
         type_matches = token_type is None or token.get("type") == token_type
-        value_match = token_value == token.get("token")
+        value_match = token_values is None or token.get("token") in token_values
         if not (type_matches and value_match):
-            raise Exception(
-                f"Expected '{token_value}' found '{token.get('token')}' at line {token.get('line')}"
-            )
+            self.panic(f"Expected any of '{token_values}' found '{token.get('token')}'")
+        if add_tag:
+            self.add_current_tag()
         if advance:
             self.tokenizer.advance()
+
+    def write(self, text: str, indent=True):
+        tabs = "\t" * self.indent if indent else ""
+        self.content += tabs + text
+
+    def writeln(self, text: str, indent=True):
+        self.write(f"{text}\n", indent=indent)
+
+    def add_current_tag(self):
+        token = self.tokenizer.get_token()
+        self.add_one_line_tag(token["type"], token["token"])
+
+    def add_one_line_tag(self, type: str, content: str):
+        self.writeln(f"<{type}> {content} </{type}>")
+
+    def open_tag(self, tag_name: str):
+        self.writeln(f"<{tag_name}>")
+        self.indent += 1
+
+    def close_tag(self, tag_name: str):
+        self.indent -= 1
+        self.writeln(f"</{tag_name}>")
 
     def compile(self):
         self.tokenizer.advance()
         self._compileClass()
 
+    @wrap("class")
     def _compileClass(self):
-        self.expect("class")
+        self.expect(Keyword.CLASS)
         self._compileIdentifier()
-        self.expect("{")
-        self._compileClassVarDec()
-        while self.tokenizer.get_token()["token"] in ("static", "function"):
+        self.expect(Symbol.LEFT_CURLY_BRACKET)
+        while self.tokenizer.get_token()["token"] in (
+            Keyword.STATIC.value,
+            Keyword.FIELD.value,
+        ):
+            self._compileClassVarDec()
+        while self.tokenizer.get_token()["token"] in (
+            Keyword.METHOD.value,
+            Keyword.FUNCTION.value,
+        ):
             self._compileSubroutine()
-        self.expect("}")
+        self.expect(Symbol.RIGHT_CURLY_BRACKET)
 
     def _compileClassVarDec(self):
         pass
 
+    @wrap("subroutineDec")
     def _compileSubroutine(self):
-        while self.tokenizer.advance()["token"] != "}":
-            pass
+        self.expect(SUBROUTINE_KEYWORDS)
+        self.expect(TYPE_KEYWORDS)
+        self._compileIdentifier()
+        self.expect(Symbol.LEFT_BRACKET)
+        self._compileParameterList()
+        self.expect(Symbol.RIGHT_BRACKET)
+        self.expect(Symbol.LEFT_CURLY_BRACKET)
+        self._compileSubroutineBody()
+        self.expect(Symbol.RIGHT_CURLY_BRACKET)
 
     def _compileParameterList(self):
         pass
 
+    @wrap("subroutineBody")
     def _compileSubroutineBody(self):
-        pass
+        depth = 0
+        while (token := self.tokenizer.advance())[
+            "token"
+        ] != Symbol.RIGHT_CURLY_BRACKET.value or depth > 0:
+            val = token["token"]
+            if val == Symbol.LEFT_CURLY_BRACKET.value:
+                depth += 1
+                continue
+            if val == Symbol.RIGHT_CURLY_BRACKET.value:
+                depth -= 1
 
     def _compileVarDec(self):
         pass
@@ -75,4 +161,11 @@ class CompilationEngine:
         pass
 
     def _compileIdentifier(self):
+        token = self.tokenizer.get_token()
+        if token["type"] != "identifier":
+            raise self.panic(f"Expected an identifier but found a {token['type']}")
         self.tokenizer.advance()
+
+    def generate_file(self):
+        with open(self.output_file, "w") as f:
+            f.write(self.content)

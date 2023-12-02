@@ -24,7 +24,7 @@ class JackTokenizer:
         with open(input_file, "r") as f:
             self.file_content = f.read()
 
-    def advance(self):
+    def advance(self) -> dict:
         self.token_pointer += 1
         return self.get_token()
 

@@ -47,7 +47,7 @@ class Symbol(Enum):
     TILDE = "~"
 
 
-OPERATORS = {
+OPERATORS = [
     Symbol.PLUS_SIGN.value,
     Symbol.MINUS_SIGN.value,
     Symbol.ASTERISK.value,
@@ -57,13 +57,13 @@ OPERATORS = {
     Symbol.LESS_THAN_SIGN.value,
     Symbol.GREATER_THAN_SIGN.value,
     Symbol.EQUAL_SIGN.value,
-}
-UNARY_OPERATORS = {
+]
+UNARY_OPERATORS = [
     Symbol.MINUS_SIGN.value,
     Symbol.TILDE.value,
-}
+]
 
-OTHER_SYMBOLS = {
+OTHER_SYMBOLS = [
     Symbol.LEFT_CURLY_BRACKET.value,
     Symbol.RIGHT_CURLY_BRACKET.value,
     Symbol.LEFT_BRACKET.value,
@@ -73,17 +73,18 @@ OTHER_SYMBOLS = {
     Symbol.DOT.value,
     Symbol.COMMA.value,
     Symbol.SEMICOLON.value,
-}
-SYMBOL = {*OPERATORS, *UNARY_OPERATORS, *OTHER_SYMBOLS}
+]
 
-KEYWORD_CONST = {
+SYMBOL = [*OPERATORS, *UNARY_OPERATORS, *OTHER_SYMBOLS]
+
+KEYWORD_CONST = [
     Keyword.TRUE.value,
     Keyword.FALSE.value,
     Keyword.NULL.value,
     Keyword.THIS.value,
-}
+]
 
-GRAMMATIC_KEYWORDS = {
+GRAMMATIC_KEYWORDS = [
     Keyword.CLASS.value,
     Keyword.CONSTRUCTOR.value,
     Keyword.FUNCTION.value,
@@ -101,9 +102,9 @@ GRAMMATIC_KEYWORDS = {
     Keyword.ELSE.value,
     Keyword.WHILE.value,
     Keyword.RETURN.value,
-}
+]
 
-KEYWORDS = {*KEYWORD_CONST, *GRAMMATIC_KEYWORDS}
+KEYWORDS = [*KEYWORD_CONST, *GRAMMATIC_KEYWORDS]
 
 CLASS_VAR_DEC_KEYWORDS = [
     Keyword.FIELD.value,
@@ -122,7 +123,7 @@ TYPE_KEYWORDS = [
     Keyword.VOID.value,
 ]
 
-WHITE_SPACE = {" ", "\t", "\n"}
+WHITE_SPACE = [" ", "\t", "\n"]
 
 MAX_INT = 32767
 

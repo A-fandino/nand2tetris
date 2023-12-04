@@ -3,9 +3,12 @@ from enum import Enum
 from Tokenizer import JackTokenizer
 from constants import (
     CLASS_VAR_DEC_KEYWORDS,
+    KEYWORD_CONST,
+    OPERATORS,
     SUBROUTINE_KEYWORDS,
     TYPE_KEYWORDS,
     DECLARATION_TYPE_TYPES,
+    UNARY_OPERATORS,
     Symbol,
     Keyword,
 )
@@ -49,7 +52,8 @@ class CompilationEngine:
         token_types: str | list[str] | None = None,
         advance=True,
         add_tag=True,
-    ):
+        mandatory=True,
+    ) -> bool:
         token = self.tokenizer.get_token()
         if token.get("type") == "EOF":
             self.panic(f"Unexpected end of file")
@@ -59,11 +63,16 @@ class CompilationEngine:
         if token_types is not None:
             if not isinstance(token_types, list):
                 token_types = [token_types]
-        type_matches = token_types is None or token.get("type") in token_types
+
+        type_match = token_types is None or token.get("type") in token_types
         value_match = token_values is None or token.get("token") in token_values
         if not value_match:
+            if not mandatory:
+                return False
             self.panic(f"Expected any of '{token_values}' found '{token.get('token')}'")
-        if not type_matches:
+        if not type_match:
+            if not mandatory:
+                return False
             self.panic(
                 f"Unsupported {token['type']} '{token['token']}'. Expected {token_types}"
             )
@@ -71,6 +80,7 @@ class CompilationEngine:
             self.add_current_tag()
         if advance:
             self.tokenizer.advance()
+        return True
 
     def write(self, text: str, indent=True):
         tabs = "\t" * self.indent if indent else ""
@@ -238,11 +248,32 @@ class CompilationEngine:
 
     @wrap("expression")
     def _compileExpression(self):
-        self.expectIdentifier()
+        has_unary = self.expect(UNARY_OPERATORS, mandatory=False)
+        token = self.tokenizer.get_token()
+        is_number = token["type"] in ("integerConstant", "identifier")
+        if has_unary and is_number is False:
+            self.panic("No unary operator allowed for non-integer terms")
+
+        self._compileTerm()
+        while (token := self.tokenizer.get_token())["token"] in OPERATORS:
+            self.expect(OPERATORS)
+            self._compileTerm()
 
     @wrap("term")
     def _compileTerm(self):
-        pass
+        # has_unary = self.expect(UNARY_OPERATORS, mandatory=False)
+        # token = self.tokenizer.get_token()
+        # is_number = token["type"] in ("integerConstant", "identifier")
+        # if has_unary and is_number is False:
+        #     self.panic("No unary operator allowed for non-integer terms")
+
+        is_value = (
+            self.expect(KEYWORD_CONST, mandatory=False)
+            or self.expectIdentifier(mandatory=False)
+            or self.expect(None, ["stringConstant", "integerConstant"], mandatory=False)
+        )
+        if is_value is False:
+            self.panic("Expected value in term")
 
     @wrap("expressionList")
     def _compileExpressionList(self):
@@ -263,8 +294,8 @@ class CompilationEngine:
             self.expectIdentifier()
             is_first = False
 
-    def expectIdentifier(self):
-        self.expect(None, "identifier")
+    def expectIdentifier(self, mandatory=True):
+        return self.expect(None, "identifier", mandatory=mandatory)
 
     def generate_file(self):
         with open(self.output_file, "w") as f:

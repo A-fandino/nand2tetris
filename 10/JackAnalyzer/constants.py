@@ -105,6 +105,11 @@ GRAMMATIC_KEYWORDS = {
 
 KEYWORDS = {*KEYWORD_CONST, *GRAMMATIC_KEYWORDS}
 
+CLASS_VAR_DEC_KEYWORDS = [
+    Keyword.FIELD.value,
+    Keyword.STATIC.value,
+]
+
 SUBROUTINE_KEYWORDS = [
     Keyword.FUNCTION.value,
     Keyword.METHOD.value,

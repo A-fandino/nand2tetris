@@ -2,6 +2,7 @@ from __future__ import annotations
 from enum import Enum
 from Tokenizer import JackTokenizer
 from constants import (
+    CLASS_VAR_DEC_KEYWORDS,
     SUBROUTINE_KEYWORDS,
     TYPE_KEYWORDS,
     DECLARATION_TYPE_TYPES,
@@ -103,22 +104,20 @@ class CompilationEngine:
         self.expect(Keyword.CLASS.value)
         self.expectIdentifier()
         self.expect(Symbol.LEFT_CURLY_BRACKET.value)
-        while self.tokenizer.get_token()["token"] in (
-            Keyword.STATIC.value,
-            Keyword.FIELD.value,
-        ):
+
+        while self.tokenizer.get_token()["token"] in CLASS_VAR_DEC_KEYWORDS:
             self._compileClassVarDec()
-        while self.tokenizer.get_token()["token"] in (
-            Keyword.METHOD.value,
-            Keyword.FUNCTION.value,
-            Keyword.CONSTRUCTOR.value,
-        ):
+        while self.tokenizer.get_token()["token"] in SUBROUTINE_KEYWORDS:
             self._compileSubroutine()
 
         self.expect(Symbol.RIGHT_CURLY_BRACKET.value)
 
+    @wrap("classVarDec")
     def _compileClassVarDec(self):
-        pass
+        self.expect(CLASS_VAR_DEC_KEYWORDS)
+        self.expect(None, DECLARATION_TYPE_TYPES)
+        self._compileIdentifierList()
+        self.expect(Symbol.SEMICOLON.value)
 
     @wrap("subroutineDec")
     def _compileSubroutine(self):
@@ -163,12 +162,7 @@ class CompilationEngine:
     def _compileVarDec(self):
         self.expect(Keyword.VAR.value)
         self.expect(None, DECLARATION_TYPE_TYPES)
-        is_first = True
-        while self.tokenizer.get_token()["token"] != Symbol.SEMICOLON.value:
-            if is_first is False:
-                self.expect(Symbol.COMMA.value)
-            self.expectIdentifier()
-            is_first = False
+        self._compileIdentifierList()
         self.expect(Symbol.SEMICOLON.value)
 
     @wrap("statements")
@@ -256,6 +250,14 @@ class CompilationEngine:
         while (
             self.tokenizer.get_token()["token"] != Symbol.RIGHT_BRACKET.value
         ):  #! this is not correct
+            if is_first is False:
+                self.expect(Symbol.COMMA.value)
+            self.expectIdentifier()
+            is_first = False
+
+    def _compileIdentifierList(self):
+        is_first = True
+        while self.tokenizer.get_token()["token"] != Symbol.SEMICOLON.value:
             if is_first is False:
                 self.expect(Symbol.COMMA.value)
             self.expectIdentifier()

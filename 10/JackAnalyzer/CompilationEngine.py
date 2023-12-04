@@ -157,7 +157,13 @@ class CompilationEngine:
     @wrap("varDec")
     def _compileVarDec(self):
         self.expect(Keyword.VAR.value)
-        self._compileParameterList()
+        self.expect(None, DECLARATION_TYPE_TYPES)
+        is_first = True
+        while self.tokenizer.get_token()["token"] != Symbol.SEMICOLON.value:
+            if is_first is False:
+                self.expect(Symbol.COMMA.value)
+            self.expectIdentifier()
+            is_first = False
         self.expect(Symbol.SEMICOLON.value)
 
     @wrap("statements")
@@ -185,9 +191,9 @@ class CompilationEngine:
     def _compileLet(self):
         self.expect(Keyword.LET.value)
         self.expectIdentifier()
-        self.expect(Symbol.EQUAL_SIGN)
+        self.expect(Symbol.EQUAL_SIGN.value)
         self._compileExpression()
-        self.expect(Symbol.SEMICOLON)
+        self.expect(Symbol.SEMICOLON.value)
 
     @wrap("whileStatement")
     def _compileWhile(self):

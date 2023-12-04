@@ -111,6 +111,7 @@ class CompilationEngine:
         while self.tokenizer.get_token()["token"] in (
             Keyword.METHOD.value,
             Keyword.FUNCTION.value,
+            Keyword.CONSTRUCTOR.value,
         ):
             self._compileSubroutine()
 
@@ -122,7 +123,7 @@ class CompilationEngine:
     @wrap("subroutineDec")
     def _compileSubroutine(self):
         self.expect(SUBROUTINE_KEYWORDS)
-        self.expect(TYPE_KEYWORDS)
+        self.expectType()
         self.expectIdentifier()
         self.expect(Symbol.LEFT_BRACKET.value)
         self._compileParameterList()
@@ -137,23 +138,25 @@ class CompilationEngine:
         ] in DECLARATION_TYPE_TYPES or token["token"] == Symbol.COMMA.value:
             if not is_first:
                 self.expect(Symbol.COMMA.value)
-            tval = token["token"]
-            ttype = token["type"]
-            if ttype == "keyword" and tval not in TYPE_KEYWORDS:
-                self.panic(f"Unsupported keyword '{token.get('token')}'")
-            self.add_current_tag()
-            self.tokenizer.advance()
+            self.expectType()
             self.expectIdentifier()
             is_first = False
+
+    def expectType(self):
+        token = self.tokenizer.get_token()
+        tval = token["token"]
+        ttype = token["type"]
+        if ttype == "keyword" and tval not in TYPE_KEYWORDS:
+            self.panic(f"Unsupported keyword '{token.get('token')}'")
+        self.add_current_tag()
+        self.tokenizer.advance()
 
     @wrap("subroutineBody")
     def _compileSubroutineBody(self):
         self.expect(Symbol.LEFT_CURLY_BRACKET.value)
         while self.tokenizer.get_token()["token"] == Keyword.VAR.value:
             self._compileVarDec()
-        token = self.tokenizer.get_token()
         self._compileStatements()
-
         self.expect(Symbol.RIGHT_CURLY_BRACKET.value)
 
     @wrap("varDec")
@@ -200,35 +203,35 @@ class CompilationEngine:
     @wrap("whileStatement")
     def _compileWhile(self):
         self.expect(Keyword.WHILE.value)
-        self.expect(Symbol.LEFT_BRACKET)
+        self.expect(Symbol.LEFT_BRACKET.value)
         self._compileExpression()
-        self.expect(Symbol.RIGHT_BRACKET)
-        self.expect(Symbol.LEFT_CURLY_BRACKET)
+        self.expect(Symbol.RIGHT_BRACKET.value)
+        self.expect(Symbol.LEFT_CURLY_BRACKET.value)
         self._compileStatements()
-        self.expect(Symbol.RIGHT_CURLY_BRACKET)
+        self.expect(Symbol.RIGHT_CURLY_BRACKET.value)
 
     @wrap("returnStatement")
     def _compileReturn(self):
         self.expect(Keyword.RETURN.value)
-        if self.tokenizer.get_token()["value"] != Symbol.SEMICOLON.value:
+        if self.tokenizer.get_token()["token"] != Symbol.SEMICOLON.value:
             self._compileExpression()
         self.expect(Symbol.SEMICOLON.value)
 
     @wrap("ifStatement")
     def _compileIf(self):
         self.expect(Keyword.IF.value)
-        self.expect(Symbol.LEFT_BRACKET)
+        self.expect(Symbol.LEFT_BRACKET.value)
         self._compileExpression()
-        self.expect(Symbol.RIGHT_BRACKET)
-        self.expect(Symbol.LEFT_CURLY_BRACKET)
+        self.expect(Symbol.RIGHT_BRACKET.value)
+        self.expect(Symbol.LEFT_CURLY_BRACKET.value)
         self._compileStatements()
-        self.expect(Symbol.RIGHT_CURLY_BRACKET)
+        self.expect(Symbol.RIGHT_CURLY_BRACKET.value)
         token = self.tokenizer.get_token()
         if token["token"] == Keyword.ELSE.value:
             self.expect(Keyword.ELSE.value)
-            self.expect(Symbol.LEFT_CURLY_BRACKET)
+            self.expect(Symbol.LEFT_CURLY_BRACKET.value)
             self._compileStatements()
-            self.expect(Symbol.RIGHT_CURLY_BRACKET)
+            self.expect(Symbol.RIGHT_CURLY_BRACKET.value)
 
     @wrap("expression")
     def _compileExpression(self):

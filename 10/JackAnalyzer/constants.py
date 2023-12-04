@@ -105,7 +105,11 @@ GRAMMATIC_KEYWORDS = {
 
 KEYWORDS = {*KEYWORD_CONST, *GRAMMATIC_KEYWORDS}
 
-SUBROUTINE_KEYWORDS = [Keyword.FUNCTION.value, Keyword.METHOD.value]
+SUBROUTINE_KEYWORDS = [
+    Keyword.FUNCTION.value,
+    Keyword.METHOD.value,
+    Keyword.CONSTRUCTOR.value,
+]
 TYPE_KEYWORDS = [
     Keyword.INT.value,
     Keyword.CHAR.value,

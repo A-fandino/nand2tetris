@@ -35,8 +35,8 @@ class CompilationEngine:
 
     def expect(
         self,
-        token_values: str | Enum | list[str | Enum] | None = None,
-        token_type: str = None,
+        token_values: str | list[str] | None = None,
+        token_types: str | list[str] | None = None,
         advance=True,
         add_tag=True,
     ):
@@ -46,10 +46,10 @@ class CompilationEngine:
         if token_values is not None:
             if not isinstance(token_values, list):
                 token_values = [token_values]
-            token_values: list[str] = [
-                val.value if isinstance(val, Enum) else val for val in token_values
-            ]
-        type_matches = token_type is None or token.get("type") == token_type
+        if token_types is not None:
+            if not isinstance(token_types, list):
+                token_types = [token_types]
+        type_matches = token_types is None or token.get("type") in token_types
         value_match = token_values is None or token.get("token") in token_values
         if not (type_matches and value_match):
             self.panic(f"Expected any of '{token_values}' found '{token.get('token')}'")
@@ -87,9 +87,9 @@ class CompilationEngine:
 
     @wrap("class")
     def _compileClass(self):
-        self.expect(Keyword.CLASS)
-        self._compileIdentifier()
-        self.expect(Symbol.LEFT_CURLY_BRACKET)
+        self.expect(Keyword.CLASS.value)
+        self.expectIdentifier()
+        self.expect(Symbol.LEFT_CURLY_BRACKET.value)
         while self.tokenizer.get_token()["token"] in (
             Keyword.STATIC.value,
             Keyword.FIELD.value,
@@ -101,7 +101,7 @@ class CompilationEngine:
         ):
             self._compileSubroutine()
 
-        self.expect(Symbol.RIGHT_CURLY_BRACKET)
+        self.expect(Symbol.RIGHT_CURLY_BRACKET.value)
 
     def _compileClassVarDec(self):
         pass
@@ -110,13 +110,13 @@ class CompilationEngine:
     def _compileSubroutine(self):
         self.expect(SUBROUTINE_KEYWORDS)
         self.expect(TYPE_KEYWORDS)
-        self._compileIdentifier()
-        self.expect(Symbol.LEFT_BRACKET)
+        self.expectIdentifier()
+        self.expect(Symbol.LEFT_BRACKET.value)
         self._compileParameterList()
-        self.expect(Symbol.RIGHT_BRACKET)
-        self.expect(Symbol.LEFT_CURLY_BRACKET)
+        self.expect(Symbol.RIGHT_BRACKET.value)
+        self.expect(Symbol.LEFT_CURLY_BRACKET.value)
         self._compileSubroutineBody()
-        self.expect(Symbol.RIGHT_CURLY_BRACKET)
+        self.expect(Symbol.RIGHT_CURLY_BRACKET.value)
 
     def _compileParameterList(self):
         pass

@@ -51,8 +51,12 @@ class CompilationEngine:
                 token_types = [token_types]
         type_matches = token_types is None or token.get("type") in token_types
         value_match = token_values is None or token.get("token") in token_values
-        if not (type_matches and value_match):
+        if not value_match:
             self.panic(f"Expected any of '{token_values}' found '{token.get('token')}'")
+        if not type_matches:
+            self.panic(
+                f"Unsupported {token['type']} '{token['token']}'. Expected {token_types}"
+            )
         if add_tag:
             self.add_current_tag()
         if advance:
@@ -118,8 +122,26 @@ class CompilationEngine:
         self._compileSubroutineBody()
         self.expect(Symbol.RIGHT_CURLY_BRACKET.value)
 
+    @wrap("parameterList")
     def _compileParameterList(self):
-        pass
+        is_first = True
+        DECLARATION_TYPE_TYPES = (
+            "identifier",
+            "keyword",
+        )
+        while (token := self.tokenizer.get_token())[
+            "type"
+        ] in DECLARATION_TYPE_TYPES or token["token"] == Symbol.COMMA.value:
+            if not is_first:
+                self.expect(Symbol.COMMA.value)
+            tval = token["token"]
+            ttype = token["type"]
+            if ttype == "keyword" and tval not in TYPE_KEYWORDS:
+                self.panic(f"Unsupported keyword '{token.get('token')}'")
+            self.add_current_tag()
+            self.tokenizer.advance()
+            self.expectIdentifier()
+            is_first = False
 
     @wrap("subroutineBody")
     def _compileSubroutineBody(self):
@@ -164,11 +186,8 @@ class CompilationEngine:
     def _compileExpressionList(self):
         pass
 
-    def _compileIdentifier(self):
-        token = self.tokenizer.get_token()
-        if token["type"] != "identifier":
-            raise self.panic(f"Expected an identifier but found a {token['type']}")
-        self.tokenizer.advance()
+    def expectIdentifier(self):
+        self.expect(None, "identifier")
 
     def generate_file(self):
         with open(self.output_file, "w") as f:

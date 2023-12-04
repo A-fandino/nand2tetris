@@ -2,7 +2,6 @@ from __future__ import annotations
 from enum import Enum
 from Tokenizer import JackTokenizer
 from constants import (
-    STATEMENT_KEYWORDS,
     SUBROUTINE_KEYWORDS,
     TYPE_KEYWORDS,
     DECLARATION_TYPE_TYPES,
@@ -37,6 +36,9 @@ class CompilationEngine:
         self.indent = 0
 
     def panic(self, message: str):
+        with open("errout.xml", "w") as f:
+            f.write(self.content)
+
         line = self.tokenizer.get_token()["line"]
         raise Exception(f"{message} at line {line}")
 

@@ -1,7 +1,14 @@
 from __future__ import annotations
 from enum import Enum
 from Tokenizer import JackTokenizer
-from constants import SUBROUTINE_KEYWORDS, TYPE_KEYWORDS, Symbol, Keyword
+from constants import (
+    STATEMENT_KEYWORDS,
+    SUBROUTINE_KEYWORDS,
+    TYPE_KEYWORDS,
+    DECLARATION_TYPE_TYPES,
+    Symbol,
+    Keyword,
+)
 
 
 def wrap(tag: str):
@@ -118,17 +125,11 @@ class CompilationEngine:
         self.expect(Symbol.LEFT_BRACKET.value)
         self._compileParameterList()
         self.expect(Symbol.RIGHT_BRACKET.value)
-        self.expect(Symbol.LEFT_CURLY_BRACKET.value)
         self._compileSubroutineBody()
-        self.expect(Symbol.RIGHT_CURLY_BRACKET.value)
 
     @wrap("parameterList")
     def _compileParameterList(self):
         is_first = True
-        DECLARATION_TYPE_TYPES = (
-            "identifier",
-            "keyword",
-        )
         while (token := self.tokenizer.get_token())[
             "type"
         ] in DECLARATION_TYPE_TYPES or token["token"] == Symbol.COMMA.value:
@@ -145,44 +146,91 @@ class CompilationEngine:
 
     @wrap("subroutineBody")
     def _compileSubroutineBody(self):
-        depth = 0
-        while (token := self.tokenizer.advance())[
-            "token"
-        ] != Symbol.RIGHT_CURLY_BRACKET.value or depth > 0:
-            val = token["token"]
-            if val == Symbol.LEFT_CURLY_BRACKET.value:
-                depth += 1
-                continue
-            if val == Symbol.RIGHT_CURLY_BRACKET.value:
-                depth -= 1
+        self.expect(Symbol.LEFT_CURLY_BRACKET.value)
+        while self.tokenizer.get_token()["token"] == Keyword.VAR.value:
+            self._compileVarDec()
+        token = self.tokenizer.get_token()
+        self._compileStatements()
 
+        self.expect(Symbol.RIGHT_CURLY_BRACKET.value)
+
+    @wrap("varDec")
     def _compileVarDec(self):
-        pass
+        self.expect(Keyword.VAR.value)
+        self._compileParameterList()
+        self.expect(Symbol.SEMICOLON.value)
 
+    @wrap("statements")
     def _compileStatements(self):
-        pass
+        while token := self.tokenizer.get_token():
+            value = token["token"]
+            if value == Keyword.DO.value:
+                self._compileDo()
+            elif value == Keyword.IF.value:
+                self._compileIf()
+            elif value == Keyword.WHILE.value:
+                self._compileWhile()
+            elif value == Keyword.LET.value:
+                self._compileLet()
+            elif value == Keyword.RETURN.value:
+                self._compileReturn()
+            else:
+                break
 
+    @wrap("doStatement")
     def _compileDo(self):
-        pass
+        self.expect(Keyword.DO.value)
 
+    @wrap("letStatement")
     def _compileLet(self):
-        pass
+        self.expect(Keyword.LET.value)
+        self.expectIdentifier()
+        self.expect(Symbol.EQUAL_SIGN)
+        self._compileExpression()
+        self.expect(Symbol.SEMICOLON)
 
+    @wrap("whileStatement")
     def _compileWhile(self):
-        pass
+        self.expect(Keyword.WHILE.value)
+        self.expect(Symbol.LEFT_BRACKET)
+        self._compileExpression()
+        self.expect(Symbol.RIGHT_BRACKET)
+        self.expect(Symbol.LEFT_CURLY_BRACKET)
+        self._compileStatements()
+        self.expect(Symbol.RIGHT_CURLY_BRACKET)
 
+    @wrap("returnStatement")
     def _compileReturn(self):
-        pass
+        self.expect(Keyword.RETURN.value)
+        if self.tokenizer.get_token()["value"] != Symbol.SEMICOLON.value:
+            self._compileExpression()
+        self.expect(Symbol.SEMICOLON.value)
 
+    @wrap("ifStatement")
     def _compileIf(self):
-        pass
+        self.expect(Keyword.IF.value)
+        self.expect(Symbol.LEFT_BRACKET)
+        self._compileExpression()
+        self.expect(Symbol.RIGHT_BRACKET)
+        self.expect(Symbol.LEFT_CURLY_BRACKET)
+        self._compileStatements()
+        self.expect(Symbol.RIGHT_CURLY_BRACKET)
+        token = self.tokenizer.get_token()
+        if token["token"] == Keyword.ELSE.value:
+            self.expect(Keyword.ELSE.value)
+            self.expect(Symbol.LEFT_CURLY_BRACKET)
+            self._compileStatements()
+            self.expect(Symbol.RIGHT_CURLY_BRACKET)
 
+    @wrap("expression")
     def _compileExpression(self):
         pass
 
+    @wrap("term")
     def _compileTerm(self):
         pass
 
+    @wrap("expressionList")
     def _compileExpressionList(self):
         pass
 

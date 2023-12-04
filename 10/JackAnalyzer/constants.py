@@ -113,13 +113,6 @@ TYPE_KEYWORDS = [
     Keyword.VOID.value,
 ]
 
-SYMBOL_TO_XML = {
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "&": "&amp;",
-}
-
 WHITE_SPACE = {" ", "\t", "\n"}
 
 MAX_INT = 32767
@@ -132,3 +125,8 @@ SPECIAL_CHARACTERS = {
     ">": "&gt;",
     '"': "&quot;",
 }
+
+DECLARATION_TYPE_TYPES = [
+    "identifier",
+    "keyword",
+]

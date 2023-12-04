@@ -191,6 +191,15 @@ class CompilationEngine:
     @wrap("doStatement")
     def _compileDo(self):
         self.expect(Keyword.DO.value)
+        self.expectIdentifier()
+        token = self.tokenizer.get_token()
+        if token["token"] == Symbol.DOT.value:
+            self.expect(Symbol.DOT.value)
+            self.expectIdentifier()
+        self.expect(Symbol.LEFT_BRACKET.value)
+        self._compileExpressionList()
+        self.expect(Symbol.RIGHT_BRACKET.value)
+        self.expect(Symbol.SEMICOLON.value)
 
     @wrap("letStatement")
     def _compileLet(self):
@@ -235,7 +244,7 @@ class CompilationEngine:
 
     @wrap("expression")
     def _compileExpression(self):
-        pass
+        self.expectIdentifier()
 
     @wrap("term")
     def _compileTerm(self):
@@ -243,7 +252,14 @@ class CompilationEngine:
 
     @wrap("expressionList")
     def _compileExpressionList(self):
-        pass
+        is_first = True
+        while (
+            self.tokenizer.get_token()["token"] != Symbol.RIGHT_BRACKET.value
+        ):  #! this is not correct
+            if is_first is False:
+                self.expect(Symbol.COMMA.value)
+            self.expectIdentifier()
+            is_first = False
 
     def expectIdentifier(self):
         self.expect(None, "identifier")

@@ -1,8 +1,9 @@
 from __future__ import annotations
+
+from utils import sanitize_text
 from constants import (
     KEYWORDS,
     MAX_INT,
-    SPECIAL_CHARACTERS,
     STRING_DELIMITER,
     SYMBOL,
     WHITE_SPACE,
@@ -180,9 +181,7 @@ class JackTokenizer:
         xml_output = "<tokens>\n"
         for token in self.tokens:
             type = token["type"]
-            sane_token = "".join(
-                [SPECIAL_CHARACTERS.get(char, char) for char in token["token"]]
-            )
+            sane_token = sanitize_text(token["token"])
             xml_output += f"<{type}> {sane_token} </{type}>\n"
         xml_output += "</tokens>\n"
         with open(filename, "w") as f:

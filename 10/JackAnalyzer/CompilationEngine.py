@@ -1,5 +1,5 @@
 from __future__ import annotations
-from enum import Enum
+from utils import sanitize_text
 from Tokenizer import JackTokenizer
 from constants import (
     CLASS_VAR_DEC_KEYWORDS,
@@ -96,7 +96,8 @@ class CompilationEngine:
         self.add_one_line_tag(token["type"], token["token"])
 
     def add_one_line_tag(self, type: str, content: str):
-        self.writeln(f"<{type}> {content} </{type}>")
+        sane_content = sanitize_text(content)
+        self.writeln(f"<{type}> {sane_content} </{type}>")
 
     def open_tag(self, tag_name: str):
         self.writeln(f"<{tag_name}>")

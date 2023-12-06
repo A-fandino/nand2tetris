@@ -12,6 +12,7 @@ import re
 
 class JackTokenizer:
     file_content: str
+    file_name: str
     # tokens: str = "<tokens>\n"
     tokens: list = []
     pointer: int = -1
@@ -22,8 +23,12 @@ class JackTokenizer:
     lineChar = 1
 
     def __init__(self, input_file: str):
+        self.file_name = input_file
         with open(input_file, "r") as f:
             self.file_content = f.read()
+
+    def _generate_metadata(self):
+        return {"line": self.line, "char": self.lineChar, "file": self.file_name}
 
     def advance(self) -> dict:
         if self.token_pointer < len(self.tokens):
@@ -34,7 +39,7 @@ class JackTokenizer:
         return (
             self.tokens[self.token_pointer]
             if len(self.tokens) > self.token_pointer
-            else {"token": "EOF", "line": self.line, "type": "EOF"}
+            else {"token": "EOF", "metadata": self._generate_metadata(), "type": "EOF"}
         )
 
     def has_more_tokens(self):
@@ -143,7 +148,9 @@ class JackTokenizer:
         return char in WHITE_SPACE
 
     def add_token(self, type: str, token: str):
-        self.tokens.append({"type": type, "token": token, "line": self.line})
+        self.tokens.append(
+            {"type": type, "token": token, "metadata": self._generate_metadata()}
+        )
 
     def add_to_token(self, char: str):
         self.current_token += char

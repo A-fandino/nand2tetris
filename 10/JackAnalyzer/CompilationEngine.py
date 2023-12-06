@@ -43,8 +43,10 @@ class CompilationEngine:
         with open("errout.xml", "w") as f:
             f.write(self.content)
 
-        line = self.tokenizer.get_token()["line"]
-        raise Exception(f"{message} at line {line}")
+        meta = self.tokenizer.get_token()["metadata"]
+        raise Exception(
+            f"{message} at line {meta['line']}:{meta['char']} in file {meta['file']}"
+        )
 
     def expect(
         self,

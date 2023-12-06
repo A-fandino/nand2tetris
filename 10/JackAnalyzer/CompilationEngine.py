@@ -208,7 +208,7 @@ class CompilationEngine:
     @wrap("letStatement")
     def _compileLet(self):
         self.expect(Keyword.LET.value)
-        self.expectIdentifier()
+        self.expectIdentifier(indexable=True)
         self.expect(Symbol.EQUAL_SIGN.value)
         self._compileExpression()
         self.expect(Symbol.SEMICOLON.value)
@@ -248,29 +248,38 @@ class CompilationEngine:
 
     @wrap("expression")
     def _compileExpression(self):
-        has_unary = self.expect(UNARY_OPERATORS, mandatory=False)
-        token = self.tokenizer.get_token()
-        is_number = token["type"] in ("integerConstant", "identifier")
-        if has_unary and is_number is False:
-            self.panic("No unary operator allowed for non-integer terms")
-
         self._compileTerm()
-        while (token := self.tokenizer.get_token())["token"] in OPERATORS:
+        while self.tokenizer.get_token()["token"] in OPERATORS:
             self.expect(OPERATORS)
             self._compileTerm()
 
     @wrap("term")
     def _compileTerm(self):
-        # has_unary = self.expect(UNARY_OPERATORS, mandatory=False)
-        # token = self.tokenizer.get_token()
-        # is_number = token["type"] in ("integerConstant", "identifier")
-        # if has_unary and is_number is False:
-        #     self.panic("No unary operator allowed for non-integer terms")
+        is_parenthesis = self.expect(Symbol.LEFT_BRACKET.value, mandatory=False)
+        if is_parenthesis:
+            self._compileExpression()
+            self.expect(Symbol.RIGHT_BRACKET.value)
+            return
+        is_unary = self.expect(UNARY_OPERATORS, mandatory=False)
+        if is_unary:
+            self._compileTerm()
+            return
 
-        is_value = (
-            self.expect(KEYWORD_CONST, mandatory=False)
-            or self.expectIdentifier(mandatory=False)
-            or self.expect(None, ["stringConstant", "integerConstant"], mandatory=False)
+        # This could be unified with the doStatement logic
+        if self.expectIdentifier(mandatory=False, indexable=True):
+            has_dot = self.expect(Symbol.DOT.value, mandatory=False)
+            if has_dot:
+                self.expectIdentifier()
+            # Has dot dictates if parentheses are mandatory because you
+            # cannot access attributes
+            if self.expect(Symbol.LEFT_BRACKET.value, mandatory=has_dot):
+                self._compileExpressionList()
+                self.expect(Symbol.RIGHT_BRACKET.value)
+            self.optionalIndex()
+            return
+
+        is_value = self.expect(KEYWORD_CONST, mandatory=False) or self.expect(
+            None, ["stringConstant", "integerConstant"], mandatory=False
         )
         if is_value is False:
             self.panic("Expected value in term")
@@ -283,7 +292,7 @@ class CompilationEngine:
         ):  #! this is not correct
             if is_first is False:
                 self.expect(Symbol.COMMA.value)
-            self.expectIdentifier()
+            self._compileExpression()
             is_first = False
 
     def _compileIdentifierList(self):
@@ -294,8 +303,20 @@ class CompilationEngine:
             self.expectIdentifier()
             is_first = False
 
-    def expectIdentifier(self, mandatory=True):
-        return self.expect(None, "identifier", mandatory=mandatory)
+    def expectIdentifier(self, mandatory=True, indexable=False):
+        result = self.expect(None, "identifier", mandatory=mandatory)
+        if result is False:
+            return False
+        if indexable:
+            self.optionalIndex()
+        return True
+
+    def optionalIndex(self):
+        if self.expect(Symbol.LEFT_SQUARE_BRACKET.value, mandatory=False):
+            self._compileExpression()
+            self.expect(Symbol.RIGHT_SQUARE_BRACKET.value)
+            return True
+        return False
 
     def generate_file(self):
         with open(self.output_file, "w") as f:

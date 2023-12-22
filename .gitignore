@@ -5,3 +5,6 @@ Test.vm
 10/**/*.vm
 10/JackAnalyzer/*.xml
 10/JackAnalyzer/*.jack
+11/**/*.vm
+11/JackAnalyzer/*.xml
+11/JackAnalyzer/*.jack

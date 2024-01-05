@@ -274,7 +274,10 @@ class CodeGenerator:
         # This could be unified with the doStatement logic
         name = self.current_token["token"]
         if self.expectIdentifier(mandatory=False, indexable=True):
-            self._expectCall(name, mandatory=False)
+            is_call = self._expectCall(name, mandatory=False)
+            if not is_call:
+                symbol = self.subroutine_symbols.get_by_name(name)
+                self.writeln(f"push local {symbol['index']}")
             self.optionalIndex()
             return
 
@@ -290,18 +293,21 @@ class CodeGenerator:
         self.tokenizer.advance()
 
     def _expectCall(self, first_identifier: str, mandatory=True):
+        class_name = self.class_name
         fname = first_identifier
         has_dot = self.expect(Symbol.DOT.value, mandatory=False)
         if has_dot:
-            name = self.current_token["token"]
+            class_name = first_identifier
+            fname = self.current_token["token"]
             self.expectIdentifier()
-            fname += f".{name}"
         # Has dot dictates if parentheses are mandatory because you
         # cannot access attributes
         if self.expect(Symbol.LEFT_BRACKET.value, mandatory=(mandatory or has_dot)):
             expression_count = self._compileExpressionList()
             self.expect(Symbol.RIGHT_BRACKET.value)
-            self.writeln(f"call {fname} {expression_count}")
+            self.writeln(f"call {class_name}.{fname} {expression_count}")
+            return True
+        return False
 
     def _compileExpressionList(self) -> int:
         count = 0

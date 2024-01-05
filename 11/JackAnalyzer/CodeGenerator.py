@@ -19,8 +19,9 @@ class CodeGenerator:
     tokenizer: JackTokenizer = None
     output_file: str = None
     indent = 0
-    class_symbols = None
-    subroutine_symbols = None
+    class_name: str = None
+    class_symbols: SymbolCategory = None
+    subroutine_symbols: SymbolCategory = None
 
     def __init__(self, tokenizer: JackTokenizer, output_file: str):
         self.tokenizer = tokenizer
@@ -88,6 +89,7 @@ class CodeGenerator:
 
     def _compileClass(self):
         self.expect(Keyword.CLASS.value)
+        self.class_name = self.tokenizer.get_token()["token"]
         self.expectIdentifier()
         self.expect(Symbol.LEFT_CURLY_BRACKET.value)
 
@@ -120,6 +122,7 @@ class CodeGenerator:
         )
         self.expect(SUBROUTINE_KEYWORDS)
         self.expectType()
+        fname = self.tokenizer.get_token()["token"]
         self.expectIdentifier()
         self.expect(Symbol.LEFT_BRACKET.value)
         self._compileParameterList(
@@ -128,7 +131,14 @@ class CodeGenerator:
             )
         )
         self.expect(Symbol.RIGHT_BRACKET.value)
+        self._start_function(
+            fname,
+            len(self.subroutine_symbols.category_symbols(SymbolCategory.Argument)),
+        )
         self._compileSubroutineBody()
+
+    def _start_function(self, name, argc):
+        self.writeln(f"function {self.class_name}.{name} {argc}")
 
     def _compileParameterList(self, on_find: function | None = None):
         is_first = True
@@ -189,14 +199,9 @@ class CodeGenerator:
 
     def _compileDo(self):
         self.expect(Keyword.DO.value)
+        name = self.tokenizer.get_token()["token"]
         self.expectIdentifier()
-        token = self.tokenizer.get_token()
-        if token["token"] == Symbol.DOT.value:
-            self.expect(Symbol.DOT.value)
-            self.expectIdentifier()
-        self.expect(Symbol.LEFT_BRACKET.value)
-        self._compileExpressionList()
-        self.expect(Symbol.RIGHT_BRACKET.value)
+        self._expectCall(name)
         self.expect(Symbol.SEMICOLON.value)
 
     def _compileLet(self):
@@ -254,15 +259,9 @@ class CodeGenerator:
             return
 
         # This could be unified with the doStatement logic
+        name = self.tokenizer.get_token()["token"]
         if self.expectIdentifier(mandatory=False, indexable=True):
-            has_dot = self.expect(Symbol.DOT.value, mandatory=False)
-            if has_dot:
-                self.expectIdentifier()
-            # Has dot dictates if parentheses are mandatory because you
-            # cannot access attributes
-            if self.expect(Symbol.LEFT_BRACKET.value, mandatory=has_dot):
-                self._compileExpressionList()
-                self.expect(Symbol.RIGHT_BRACKET.value)
+            self._expectCall(name, is_mandatory=False)
             self.optionalIndex()
             return
 
@@ -272,15 +271,30 @@ class CodeGenerator:
         if is_value is False:
             self.panic("Expected value in term")
 
-    def _compileExpressionList(self):
-        is_first = True
+    def _expectCall(self, first_identifier: str, is_mandatory=True):
+        fname = first_identifier
+        has_dot = self.expect(Symbol.DOT.value, mandatory=False)
+        if has_dot:
+            name = self.tokenizer.get_token()["token"]
+            self.expectIdentifier()
+            fname += f".{name}"
+        # Has dot dictates if parentheses are mandatory because you
+        # cannot access attributes
+        if self.expect(Symbol.LEFT_BRACKET.value, mandatory=(is_mandatory or has_dot)):
+            expression_count = self._compileExpressionList()
+            self.expect(Symbol.RIGHT_BRACKET.value)
+            self.writeln(f"call {fname} {expression_count}")
+
+    def _compileExpressionList(self) -> int:
+        count = 0
         while (
             self.tokenizer.get_token()["token"] != Symbol.RIGHT_BRACKET.value
         ):  #! this is not correct
-            if is_first is False:
+            if count > 0:
                 self.expect(Symbol.COMMA.value)
             self._compileExpression()
-            is_first = False
+            count += 1
+        return count
 
     def _compileIdentifierList(self, on_find: function | None = None):
         is_first = True

@@ -38,3 +38,9 @@ class SymbolTable:
         if self.fallback:
             return self.fallback.get_by_name(name)
         return None
+
+    def category_symbols(self, category: SymbolCategory):
+        return self._symbols.get(category, {})
+
+    def count_by_category(self, category: SymbolCategory):
+        return len(self.get_by_category(category))

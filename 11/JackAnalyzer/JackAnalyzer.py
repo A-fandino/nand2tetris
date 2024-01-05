@@ -36,7 +36,7 @@ def get_output_file(file: str, tokenized: bool = False):
         dirname = os.path.dirname(file)
         path = os.path.join(dirname, filename)
 
-    ext = ".xml"
+    ext = ".vm"
     if tokenized:
         ext = "T.xml"
     return path + ext

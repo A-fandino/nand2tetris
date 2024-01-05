@@ -47,21 +47,26 @@ class Symbol(Enum):
     TILDE = "~"
 
 
-OPERATORS = [
-    Symbol.PLUS_SIGN.value,
-    Symbol.MINUS_SIGN.value,
-    Symbol.ASTERISK.value,
-    Symbol.SLASH.value,
-    Symbol.AMPERSAND.value,
-    Symbol.VERTICAL_BAR.value,
-    Symbol.LESS_THAN_SIGN.value,
-    Symbol.GREATER_THAN_SIGN.value,
-    Symbol.EQUAL_SIGN.value,
-]
-UNARY_OPERATORS = [
-    Symbol.MINUS_SIGN.value,
-    Symbol.TILDE.value,
-]
+OPERATORS_CODE = {
+    Symbol.PLUS_SIGN.value: "add",
+    Symbol.MINUS_SIGN.value: "sub",
+    Symbol.AMPERSAND.value: "and",
+    Symbol.VERTICAL_BAR.value: "or",
+    Symbol.LESS_THAN_SIGN.value: "lt",
+    Symbol.GREATER_THAN_SIGN.value: "gt",
+    Symbol.EQUAL_SIGN.value: "eq",
+    Symbol.ASTERISK.value: "call Math.multiply 2",
+    Symbol.SLASH.value: "call Math.divide 2",
+}
+
+OPERATORS = list(OPERATORS_CODE.keys())
+
+UNARY_CODE = {
+    Symbol.MINUS_SIGN.value: "neg",
+    Symbol.TILDE.value: "not",
+}
+
+UNARY_OPERATORS = list(UNARY_CODE.keys())
 
 OTHER_SYMBOLS = [
     Symbol.LEFT_CURLY_BRACKET.value,
@@ -77,12 +82,14 @@ OTHER_SYMBOLS = [
 
 SYMBOL = [*OPERATORS, *UNARY_OPERATORS, *OTHER_SYMBOLS]
 
-KEYWORD_CONST = [
-    Keyword.TRUE.value,
-    Keyword.FALSE.value,
-    Keyword.NULL.value,
-    Keyword.THIS.value,
-]
+KEYWORD_CODE = {
+    Keyword.TRUE.value: "push constant 1",
+    Keyword.FALSE.value: "push constant 0",
+    Keyword.NULL.value: "push constant 0",
+    Keyword.THIS.value: "push pointer 0",
+}
+
+KEYWORD_CONST = list(KEYWORD_CODE.keys())
 
 GRAMMATIC_KEYWORDS = [
     Keyword.CLASS.value,

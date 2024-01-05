@@ -2,12 +2,14 @@ from __future__ import annotations
 from Tokenizer import JackTokenizer
 from constants import (
     CLASS_VAR_DEC_KEYWORDS,
-    KEYWORD_CONST,
+    KEYWORD_CODE,
     OPERATORS,
+    OPERATORS_CODE,
     SUBROUTINE_KEYWORDS,
     TYPE_KEYWORDS,
     DECLARATION_TYPE_TYPES,
     UNARY_OPERATORS,
+    UNARY_CODE,
     Symbol,
     Keyword,
 )
@@ -34,7 +36,7 @@ class CodeGenerator:
         with open("errout.xml", "w") as f:
             f.write(self.content)
 
-        meta = self.tokenizer.get_token()["metadata"]
+        meta = self.current_token["metadata"]
         raise Exception(
             f"{message} at line {meta['line']}:{meta['char']} in file {meta['file']}"
         )
@@ -47,7 +49,7 @@ class CodeGenerator:
         add_tag=True,
         mandatory=True,
     ) -> bool:
-        token = self.tokenizer.get_token()
+        token = self.current_token
         if token.get("type") == "EOF":
             self.panic(f"Unexpected end of file")
         if token_values is not None:
@@ -75,6 +77,10 @@ class CodeGenerator:
             self.tokenizer.advance()
         return True
 
+    @property
+    def current_token(self):
+        return self.tokenizer.get_token()
+
     def write(self, text: str, indent=True):
         tabs = "\t" * self.indent if indent else ""
         self.content += tabs + text
@@ -85,25 +91,25 @@ class CodeGenerator:
     def compile(self):
         self.tokenizer.advance()
         self._compileClass()
-        assert self.tokenizer.get_token()["type"] == "EOF"
+        assert self.current_token["type"] == "EOF"
 
     def _compileClass(self):
         self.expect(Keyword.CLASS.value)
-        self.class_name = self.tokenizer.get_token()["token"]
+        self.class_name = self.current_token["token"]
         self.expectIdentifier()
         self.expect(Symbol.LEFT_CURLY_BRACKET.value)
 
-        while self.tokenizer.get_token()["token"] in CLASS_VAR_DEC_KEYWORDS:
+        while self.current_token["token"] in CLASS_VAR_DEC_KEYWORDS:
             self._compileClassVarDec()
-        while self.tokenizer.get_token()["token"] in SUBROUTINE_KEYWORDS:
+        while self.current_token["token"] in SUBROUTINE_KEYWORDS:
             self._compileSubroutine()
 
         self.expect(Symbol.RIGHT_CURLY_BRACKET.value)
 
     def _compileClassVarDec(self):
-        category = self.tokenizer.get_token()["token"]
+        category = self.current_token["token"]
         self.expect(CLASS_VAR_DEC_KEYWORDS)
-        type_token = self.tokenizer.get_token()
+        type_token = self.current_token
         self.expect(None, DECLARATION_TYPE_TYPES)
         self._compileIdentifierList(
             on_find=lambda token: self.class_symbols.add_symbol(
@@ -116,13 +122,11 @@ class CodeGenerator:
 
     def _compileSubroutine(self):
         self.subroutine_symbols = SymbolTable(
-            None
-            if self.tokenizer.get_token() == Keyword.FUNCTION.value
-            else self.class_symbols
+            None if self.current_token == Keyword.FUNCTION.value else self.class_symbols
         )
         self.expect(SUBROUTINE_KEYWORDS)
         self.expectType()
-        fname = self.tokenizer.get_token()["token"]
+        fname = self.current_token["token"]
         self.expectIdentifier()
         self.expect(Symbol.LEFT_BRACKET.value)
         self._compileParameterList(
@@ -142,9 +146,9 @@ class CodeGenerator:
 
     def _compileParameterList(self, on_find: function | None = None):
         is_first = True
-        while (token := self.tokenizer.get_token())[
-            "type"
-        ] in DECLARATION_TYPE_TYPES or token["token"] == Symbol.COMMA.value:
+        while (token := self.current_token)["type"] in DECLARATION_TYPE_TYPES or token[
+            "token"
+        ] == Symbol.COMMA.value:
             if not is_first:
                 self.expect(Symbol.COMMA.value)
             type_token = self.expectType()
@@ -154,25 +158,24 @@ class CodeGenerator:
             is_first = False
 
     def expectType(self) -> dict:
-        token = self.tokenizer.get_token()
+        token = self.current_token
         tval = token["token"]
         ttype = token["type"]
         if ttype == "keyword" and tval not in TYPE_KEYWORDS:
             self.panic(f"Unsupported keyword '{token.get('token')}'")
-        # self.add_current_tag()
         self.tokenizer.advance()
         return token
 
     def _compileSubroutineBody(self):
         self.expect(Symbol.LEFT_CURLY_BRACKET.value)
-        while self.tokenizer.get_token()["token"] == Keyword.VAR.value:
+        while self.current_token["token"] == Keyword.VAR.value:
             self._compileVarDec()
         self._compileStatements()
         self.expect(Symbol.RIGHT_CURLY_BRACKET.value)
 
     def _compileVarDec(self):
         self.expect(Keyword.VAR.value)
-        type_token = self.tokenizer.get_token()
+        type_token = self.current_token
         self.expect(None, DECLARATION_TYPE_TYPES)
         self._compileIdentifierList(
             on_find=lambda token: self.subroutine_symbols.add_symbol(
@@ -182,7 +185,7 @@ class CodeGenerator:
         self.expect(Symbol.SEMICOLON.value)
 
     def _compileStatements(self):
-        while token := self.tokenizer.get_token():
+        while token := self.current_token:
             value = token["token"]
             if value == Keyword.DO.value:
                 self._compileDo()
@@ -199,7 +202,7 @@ class CodeGenerator:
 
     def _compileDo(self):
         self.expect(Keyword.DO.value)
-        name = self.tokenizer.get_token()["token"]
+        name = self.current_token["token"]
         self.expectIdentifier()
         self._expectCall(name)
         self.expect(Symbol.SEMICOLON.value)
@@ -222,9 +225,10 @@ class CodeGenerator:
 
     def _compileReturn(self):
         self.expect(Keyword.RETURN.value)
-        if self.tokenizer.get_token()["token"] != Symbol.SEMICOLON.value:
+        if self.current_token["token"] != Symbol.SEMICOLON.value:
             self._compileExpression()
         self.expect(Symbol.SEMICOLON.value)
+        self.writeln("return")
 
     def _compileIf(self):
         self.expect(Keyword.IF.value)
@@ -234,7 +238,7 @@ class CodeGenerator:
         self.expect(Symbol.LEFT_CURLY_BRACKET.value)
         self._compileStatements()
         self.expect(Symbol.RIGHT_CURLY_BRACKET.value)
-        token = self.tokenizer.get_token()
+        token = self.current_token
         if token["token"] == Keyword.ELSE.value:
             self.expect(Keyword.ELSE.value)
             self.expect(Symbol.LEFT_CURLY_BRACKET.value)
@@ -243,9 +247,13 @@ class CodeGenerator:
 
     def _compileExpression(self):
         self._compileTerm()
-        while self.tokenizer.get_token()["token"] in OPERATORS:
-            self.expect(OPERATORS)
+        while self.current_token["token"] in OPERATORS:
+            operator = self.current_token
+            self.expect(
+                OPERATORS,
+            )
             self._compileTerm()
+            self._compileOperator(operator["token"])
 
     def _compileTerm(self):
         is_parenthesis = self.expect(Symbol.LEFT_BRACKET.value, mandatory=False)
@@ -253,34 +261,41 @@ class CodeGenerator:
             self._compileExpression()
             self.expect(Symbol.RIGHT_BRACKET.value)
             return
+        unary = self.current_token
         is_unary = self.expect(UNARY_OPERATORS, mandatory=False)
         if is_unary:
             self._compileTerm()
+            self.writeln(UNARY_CODE[unary["token"]])
             return
 
         # This could be unified with the doStatement logic
-        name = self.tokenizer.get_token()["token"]
+        name = self.current_token["token"]
         if self.expectIdentifier(mandatory=False, indexable=True):
-            self._expectCall(name, is_mandatory=False)
+            self._expectCall(name, mandatory=False)
             self.optionalIndex()
             return
 
-        is_value = self.expect(KEYWORD_CONST, mandatory=False) or self.expect(
-            None, ["stringConstant", "integerConstant"], mandatory=False
-        )
-        if is_value is False:
-            self.panic("Expected value in term")
+        token = self.current_token
+        if token["type"] == "integerConstant":
+            self.writeln(f"push constant {token['token']}")
+        elif token["type"] == "stringConstant":
+            pass
+        elif token["token"] in KEYWORD_CODE:
+            self.writeln(KEYWORD_CODE[token["token"]])
+        else:
+            self.panic(f"Unexpected value '{token['token']}' in term")
+        self.tokenizer.advance()
 
-    def _expectCall(self, first_identifier: str, is_mandatory=True):
+    def _expectCall(self, first_identifier: str, mandatory=True):
         fname = first_identifier
         has_dot = self.expect(Symbol.DOT.value, mandatory=False)
         if has_dot:
-            name = self.tokenizer.get_token()["token"]
+            name = self.current_token["token"]
             self.expectIdentifier()
             fname += f".{name}"
         # Has dot dictates if parentheses are mandatory because you
         # cannot access attributes
-        if self.expect(Symbol.LEFT_BRACKET.value, mandatory=(is_mandatory or has_dot)):
+        if self.expect(Symbol.LEFT_BRACKET.value, mandatory=(mandatory or has_dot)):
             expression_count = self._compileExpressionList()
             self.expect(Symbol.RIGHT_BRACKET.value)
             self.writeln(f"call {fname} {expression_count}")
@@ -288,7 +303,7 @@ class CodeGenerator:
     def _compileExpressionList(self) -> int:
         count = 0
         while (
-            self.tokenizer.get_token()["token"] != Symbol.RIGHT_BRACKET.value
+            self.current_token["token"] != Symbol.RIGHT_BRACKET.value
         ):  #! this is not correct
             if count > 0:
                 self.expect(Symbol.COMMA.value)
@@ -298,7 +313,7 @@ class CodeGenerator:
 
     def _compileIdentifierList(self, on_find: function | None = None):
         is_first = True
-        while self.tokenizer.get_token()["token"] != Symbol.SEMICOLON.value:
+        while self.current_token["token"] != Symbol.SEMICOLON.value:
             if is_first is False:
                 self.expect(Symbol.COMMA.value)
             self.expectIdentifier(on_find=on_find)
@@ -307,7 +322,7 @@ class CodeGenerator:
     def expectIdentifier(
         self, mandatory=True, indexable=False, on_find: function | None = None
     ):
-        token = self.tokenizer.get_token()
+        token = self.current_token
         result = self.expect(None, "identifier", mandatory=mandatory)
         if result is False:
             return False
@@ -327,3 +342,6 @@ class CodeGenerator:
     def generate_file(self):
         with open(self.output_file, "w") as f:
             f.write(self.content)
+
+    def _compileOperator(self, operator: str):
+        self.writeln(OPERATORS_CODE[operator])

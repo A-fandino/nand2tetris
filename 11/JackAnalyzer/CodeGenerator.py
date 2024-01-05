@@ -209,9 +209,12 @@ class CodeGenerator:
 
     def _compileLet(self):
         self.expect(Keyword.LET.value)
+        identifier = self.current_token
         self.expectIdentifier(indexable=True)
         self.expect(Symbol.EQUAL_SIGN.value)
         self._compileExpression()
+        symbol = self.subroutine_symbols.get_by_name(identifier["token"])
+        self.writeln(f"pop local {symbol['index']}")
         self.expect(Symbol.SEMICOLON.value)
 
     def _compileWhile(self):

@@ -1,4 +1,5 @@
 from __future__ import annotations
+import uuid
 from Tokenizer import JackTokenizer
 from constants import (
     CLASS_VAR_DEC_KEYWORDS,
@@ -14,6 +15,11 @@ from constants import (
     Keyword,
 )
 from SymbolTable import SymbolCategory, SymbolTable
+
+
+def generate_label():
+    # This is temporary (I hope)
+    return str(uuid.uuid4())
 
 
 class CodeGenerator:
@@ -218,12 +224,17 @@ class CodeGenerator:
         self.expect(Symbol.SEMICOLON.value)
 
     def _compileWhile(self):
+        label = generate_label()
+        self.writeln(f"label {label}")
         self.expect(Keyword.WHILE.value)
         self.expect(Symbol.LEFT_BRACKET.value)
         self._compileExpression()
         self.expect(Symbol.RIGHT_BRACKET.value)
         self.expect(Symbol.LEFT_CURLY_BRACKET.value)
+        self.writeln("neg")
+        self.writeln(f"if-goto {label}")
         self._compileStatements()
+        self.writeln(f"goto {label}")
         self.expect(Symbol.RIGHT_CURLY_BRACKET.value)
 
     def _compileReturn(self):
@@ -234,12 +245,17 @@ class CodeGenerator:
         self.writeln("return")
 
     def _compileIf(self):
+        label = generate_label()
+        else_label = f"{label}-else"
         self.expect(Keyword.IF.value)
         self.expect(Symbol.LEFT_BRACKET.value)
         self._compileExpression()
         self.expect(Symbol.RIGHT_BRACKET.value)
         self.expect(Symbol.LEFT_CURLY_BRACKET.value)
+        self.writeln("neg")
+        self.writeln(f"if-goto {label}")
         self._compileStatements()
+        self.writeln(f"label {label}")
         self.expect(Symbol.RIGHT_CURLY_BRACKET.value)
         token = self.current_token
         if token["token"] == Keyword.ELSE.value:

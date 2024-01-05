@@ -245,17 +245,18 @@ class CodeGenerator:
         self.writeln("return")
 
     def _compileIf(self):
-        label = generate_label()
-        else_label = f"{label}-else"
+        end_if_label = generate_label()
+        end_else_label = f"{end_if_label}-else"
         self.expect(Keyword.IF.value)
         self.expect(Symbol.LEFT_BRACKET.value)
         self._compileExpression()
         self.expect(Symbol.RIGHT_BRACKET.value)
         self.expect(Symbol.LEFT_CURLY_BRACKET.value)
         self.writeln("neg")
-        self.writeln(f"if-goto {label}")
+        self.writeln(f"if-goto {end_if_label}")
         self._compileStatements()
-        self.writeln(f"label {label}")
+        self.writeln(f"goto {end_else_label}")
+        self.writeln(f"label {end_if_label}")
         self.expect(Symbol.RIGHT_CURLY_BRACKET.value)
         token = self.current_token
         if token["token"] == Keyword.ELSE.value:
@@ -263,6 +264,7 @@ class CodeGenerator:
             self.expect(Symbol.LEFT_CURLY_BRACKET.value)
             self._compileStatements()
             self.expect(Symbol.RIGHT_CURLY_BRACKET.value)
+        self.writeln(f"label {end_else_label}")
 
     def _compileExpression(self):
         self._compileTerm()

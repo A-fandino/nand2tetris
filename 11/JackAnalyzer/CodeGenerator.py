@@ -225,6 +225,7 @@ class CodeGenerator:
 
     def _compileWhile(self):
         label = generate_label()
+        label_end = f"{label}-end"
         self.writeln(f"label {label}")
         self.expect(Keyword.WHILE.value)
         self.expect(Symbol.LEFT_BRACKET.value)
@@ -232,9 +233,10 @@ class CodeGenerator:
         self.expect(Symbol.RIGHT_BRACKET.value)
         self.expect(Symbol.LEFT_CURLY_BRACKET.value)
         self.writeln("neg")
-        self.writeln(f"if-goto {label}")
+        self.writeln(f"if-goto {label_end}")
         self._compileStatements()
         self.writeln(f"goto {label}")
+        self.writeln(f"label {label_end}")
         self.expect(Symbol.RIGHT_CURLY_BRACKET.value)
 
     def _compileReturn(self):

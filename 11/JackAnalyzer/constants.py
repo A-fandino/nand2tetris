@@ -83,7 +83,7 @@ OTHER_SYMBOLS = [
 SYMBOL = [*OPERATORS, *UNARY_OPERATORS, *OTHER_SYMBOLS]
 
 KEYWORD_CODE = {
-    Keyword.TRUE.value: "push constant 1\nneg",
+    Keyword.TRUE.value: "push constant 1\nneg",  # could also be !0
     Keyword.FALSE.value: "push constant 0",
     Keyword.NULL.value: "push constant 0",
     Keyword.THIS.value: "push pointer 0",

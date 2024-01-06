@@ -17,9 +17,15 @@ from constants import (
 from SymbolTable import SymbolCategory, SymbolTable
 
 
-def generate_label():
+def generate_label(base: str):
     # This is temporary (I hope)
-    return str(uuid.uuid4())
+    if base not in generate_label.label_counter:
+        generate_label.label_counter[base] = -1
+    generate_label.label_counter[base] += 1
+    return f"{base}{generate_label.label_counter[base]}"
+
+
+generate_label.label_counter = {}
 
 
 class CodeGenerator:
@@ -89,12 +95,8 @@ class CodeGenerator:
     def current_token(self):
         return self.tokenizer.get_token()
 
-    @property
-    def in_constructor(self):
-        return (
-            self.class_symbols.get_by_name(self.current_fname)["type"]
-            == Keyword.CONSTRUCTOR.value
-        )
+    def check_fn_type(self, fn_type: str):
+        return self.class_symbols.get_by_name(self.current_fname)["type"] == fn_type
 
     def write(self, text: str, indent=True):
         tabs = "\t" * self.indent if indent else ""
@@ -159,20 +161,17 @@ class CodeGenerator:
             )
         )
         self.expect(Symbol.RIGHT_BRACKET.value)
-        self._start_function(
-            fname,
-            len(self.subroutine_symbols.category_symbols(SymbolCategory.Argument)),
-        )
-        if subroutine_type == Keyword.CONSTRUCTOR.value:
+        self._compileSubroutineBody()
+
+    def _start_function(self, name, argc):
+        self.writeln(f"function {self.class_name}.{name} {argc}")
+
+        if self.check_fn_type(Keyword.CONSTRUCTOR.value):
             self.writeln(
                 f"push constant {self.class_symbols.count_by_category(SymbolCategory.Field)}"
             )
             self.writeln("call Memory.alloc 1")
             self.writeln("pop pointer 0")
-        self._compileSubroutineBody()
-
-    def _start_function(self, name, argc):
-        self.writeln(f"function {self.class_name}.{name} {argc}")
 
     def _compileParameterList(self, on_find: function | None = None):
         is_first = True
@@ -200,6 +199,11 @@ class CodeGenerator:
         self.expect(Symbol.LEFT_CURLY_BRACKET.value)
         while self.current_token["token"] == Keyword.VAR.value:
             self._compileVarDec()
+        self._start_function(
+            self.current_fname,
+            self.subroutine_symbols.count_by_category(SymbolCategory.Var),
+        )
+
         self._compileStatements()
         self.expect(Symbol.RIGHT_CURLY_BRACKET.value)
 
@@ -249,15 +253,15 @@ class CodeGenerator:
         self.expect(Symbol.SEMICOLON.value)
 
     def _compileWhile(self):
-        label = generate_label()
-        label_end = f"{label}-end"
+        label = generate_label("WHILE_EXP")
+        label_end = generate_label("WHILE_END")
         self.writeln(f"label {label}")
         self.expect(Keyword.WHILE.value)
         self.expect(Symbol.LEFT_BRACKET.value)
         self._compileExpression()
         self.expect(Symbol.RIGHT_BRACKET.value)
         self.expect(Symbol.LEFT_CURLY_BRACKET.value)
-        self.writeln("neg")
+        self.writeln("not")
         self.writeln(f"if-goto {label_end}")
         self._compileStatements()
         self.writeln(f"goto {label}")
@@ -266,7 +270,7 @@ class CodeGenerator:
 
     def _compileReturn(self):
         self.expect(Keyword.RETURN.value)
-        if self.in_constructor:
+        if self.check_fn_type(Keyword.CONSTRUCTOR.value):
             self.expect(Keyword.THIS.value)
             self.writeln("push pointer 0")
         elif self.current_token["token"] != Symbol.SEMICOLON.value:
@@ -277,14 +281,14 @@ class CodeGenerator:
         self.writeln("return")
 
     def _compileIf(self):
-        end_if_label = generate_label()
-        end_else_label = f"{end_if_label}-else"
+        end_if_label = generate_label("IF_FALSE")
+        end_else_label = generate_label("END_IF")
         self.expect(Keyword.IF.value)
         self.expect(Symbol.LEFT_BRACKET.value)
         self._compileExpression()
         self.expect(Symbol.RIGHT_BRACKET.value)
         self.expect(Symbol.LEFT_CURLY_BRACKET.value)
-        self.writeln("neg")
+        self.writeln("not")
         self.writeln(f"if-goto {end_if_label}")
         self._compileStatements()
         self.writeln(f"goto {end_else_label}")
@@ -351,24 +355,37 @@ class CodeGenerator:
         class_name = self.class_name
         fname = first_identifier
         has_dot = self.expect(Symbol.DOT.value, mandatory=False)
+        is_method = True
+        target_object: Symbol = None
         if has_dot:
-            class_name = first_identifier
+            target_object = self.subroutine_symbols.get_by_name(first_identifier)
+            if target_object:
+                class_name = target_object["type"]
+            else:
+                class_name = first_identifier
+                is_method = False
             fname = self.current_token["token"]
             self.expectIdentifier()
         # Has dot dictates if parentheses are mandatory because you
         # cannot access attributes
         if self.expect(Symbol.LEFT_BRACKET.value, mandatory=(mandatory or has_dot)):
-            expression_count = self._compileExpressionList()
+            if is_method:
+                if class_name == self.class_name:
+                    self.writeln("push pointer 0")
+                else:
+                    self.writeln(
+                        f"push {target_object['memory_segment']} {target_object['index']}"
+                    )
+            argument_count = self._compileExpressionList() + is_method
             self.expect(Symbol.RIGHT_BRACKET.value)
-            self.writeln(f"call {class_name}.{fname} {expression_count}")
+
+            self.writeln(f"call {class_name}.{fname} {argument_count}")
             return True
         return False
 
     def _compileExpressionList(self) -> int:
         count = 0
-        while (
-            self.current_token["token"] != Symbol.RIGHT_BRACKET.value
-        ):  #! this is not correct
+        while self.current_token["token"] != Symbol.RIGHT_BRACKET.value:
             if count > 0:
                 self.expect(Symbol.COMMA.value)
             self._compileExpression()

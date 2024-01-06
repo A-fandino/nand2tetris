@@ -52,4 +52,4 @@ class SymbolTable:
         return self._symbols.get(category, {})
 
     def count_by_category(self, category: SymbolCategory):
-        return len(self.get_by_category(category))
+        return len(self.category_symbols(category))

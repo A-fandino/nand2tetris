@@ -172,6 +172,9 @@ class CodeGenerator:
             )
             self.writeln("call Memory.alloc 1")
             self.writeln("pop pointer 0")
+        elif self.check_fn_type(Keyword.METHOD.value):
+            self.writeln("push argument 0")
+            self.writeln("pop pointer 0")
 
     def _compileParameterList(self, on_find: function | None = None):
         is_first = True

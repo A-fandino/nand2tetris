@@ -305,7 +305,12 @@ class CodeGenerator:
         if token["type"] == "integerConstant":
             self.writeln(f"push constant {token['token']}")
         elif token["type"] == "stringConstant":
-            pass
+            length = len(token["token"])
+            self.writeln(f"push constant {length}")
+            self.writeln("call String.new 1")
+            for char in token["token"]:
+                self.writeln(f"push constant {ord(char)}")
+                self.writeln("call String.appendChar 2")
         elif token["token"] in KEYWORD_CODE:
             self.writeln(KEYWORD_CODE[token["token"]])
         else:

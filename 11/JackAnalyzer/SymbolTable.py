@@ -11,6 +11,14 @@ class SymbolCategory(Enum):
     Subroutine = "Subroutine"
 
 
+category_to_segment = {
+    SymbolCategory.Static: "static",
+    SymbolCategory.Field: "this",
+    SymbolCategory.Argument: "argument",
+    SymbolCategory.Var: "local",
+}
+
+
 class SymbolTable:
     _symbols: dict[str, dict] = None
     fallback: SymbolTable | None
@@ -29,6 +37,7 @@ class SymbolTable:
             "index": len(categorySymbols),
             "type": type,
             "category": category,  # Looks reudandant but helps optimizing symbol retrieval
+            "memory_segment": category_to_segment[category],
         }
 
     def get_by_name(self, name: str):

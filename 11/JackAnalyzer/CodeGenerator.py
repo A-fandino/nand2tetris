@@ -121,7 +121,7 @@ class CodeGenerator:
             on_find=lambda token: self.class_symbols.add_symbol(
                 token["token"],
                 type_token["token"],
-                Keyword.FIELD if category == "field" else Keyword.STATIC,
+                SymbolCategory.Field if category == "field" else SymbolCategory.Static,
             )
         )
         self.expect(Symbol.SEMICOLON.value)
@@ -220,7 +220,7 @@ class CodeGenerator:
         self.expect(Symbol.EQUAL_SIGN.value)
         self._compileExpression()
         symbol = self.subroutine_symbols.get_by_name(identifier["token"])
-        self.writeln(f"pop local {symbol['index']}")
+        self.writeln(f"pop {symbol['memory_segment']} {symbol['index']}")
         self.expect(Symbol.SEMICOLON.value)
 
     def _compileWhile(self):
@@ -297,7 +297,7 @@ class CodeGenerator:
             is_call = self._expectCall(name, mandatory=False)
             if not is_call:
                 symbol = self.subroutine_symbols.get_by_name(name)
-                self.writeln(f"push local {symbol['index']}")
+                self.writeln(f"push {symbol['memory_segment']} {symbol['index']}")
             self.optionalIndex()
             return
 

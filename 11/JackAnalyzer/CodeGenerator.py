@@ -30,7 +30,7 @@ class CodeGenerator:
     class_name: str = None
     class_symbols: SymbolCategory = None
     subroutine_symbols: SymbolCategory = None
-    in_constructor = False
+    current_fname = False
 
     def __init__(self, tokenizer: JackTokenizer, output_file: str):
         self.tokenizer = tokenizer
@@ -38,7 +38,7 @@ class CodeGenerator:
         self.content = ""
         self.indent = 0
         self.class_symbols = SymbolTable()
-        self.in_constructor = False
+        self.current_fname = False
 
     def panic(self, message: str):
         with open("errout.xml", "w") as f:
@@ -89,6 +89,13 @@ class CodeGenerator:
     def current_token(self):
         return self.tokenizer.get_token()
 
+    @property
+    def in_constructor(self):
+        return (
+            self.class_symbols.get_by_name(self.current_fname)["type"]
+            == Keyword.CONSTRUCTOR.value
+        )
+
     def write(self, text: str, indent=True):
         tabs = "\t" * self.indent if indent else ""
         self.content += tabs + text
@@ -133,11 +140,18 @@ class CodeGenerator:
             None if self.current_token == Keyword.FUNCTION.value else self.class_symbols
         )
         subroutine_type = self.current_token["token"]
-        self.in_constructor = subroutine_type == Keyword.CONSTRUCTOR.value
         self.expect(SUBROUTINE_KEYWORDS)
         self.expectType()
         fname = self.current_token["token"]
+        self.current_fname = fname
         self.expectIdentifier()
+
+        self.class_symbols.add_symbol(
+            fname,
+            subroutine_type,
+            SymbolCategory.Subroutine,
+        )
+
         self.expect(Symbol.LEFT_BRACKET.value)
         self._compileParameterList(
             on_find=lambda token, type_token: self.subroutine_symbols.add_symbol(
@@ -149,7 +163,7 @@ class CodeGenerator:
             fname,
             len(self.subroutine_symbols.category_symbols(SymbolCategory.Argument)),
         )
-        if self.in_constructor:
+        if subroutine_type == Keyword.CONSTRUCTOR.value:
             self.writeln(
                 f"push constant {self.class_symbols.count_by_category(SymbolCategory.Field)}"
             )

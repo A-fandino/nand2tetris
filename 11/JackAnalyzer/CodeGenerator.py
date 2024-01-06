@@ -143,6 +143,10 @@ class CodeGenerator:
         )
         subroutine_type = self.current_token["token"]
         self.expect(SUBROUTINE_KEYWORDS)
+        if subroutine_type == Keyword.METHOD.value:
+            self.subroutine_symbols.add_symbol(
+                "this", self.class_name, SymbolCategory.Argument
+            )
         self.expectType()
         fname = self.current_token["token"]
         self.current_fname = fname

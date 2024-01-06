@@ -30,6 +30,7 @@ class CodeGenerator:
     class_name: str = None
     class_symbols: SymbolCategory = None
     subroutine_symbols: SymbolCategory = None
+    in_constructor = False
 
     def __init__(self, tokenizer: JackTokenizer, output_file: str):
         self.tokenizer = tokenizer
@@ -37,6 +38,7 @@ class CodeGenerator:
         self.content = ""
         self.indent = 0
         self.class_symbols = SymbolTable()
+        self.in_constructor = False
 
     def panic(self, message: str):
         with open("errout.xml", "w") as f:
@@ -130,6 +132,8 @@ class CodeGenerator:
         self.subroutine_symbols = SymbolTable(
             None if self.current_token == Keyword.FUNCTION.value else self.class_symbols
         )
+        subroutine_type = self.current_token["token"]
+        self.in_constructor = subroutine_type == Keyword.CONSTRUCTOR.value
         self.expect(SUBROUTINE_KEYWORDS)
         self.expectType()
         fname = self.current_token["token"]
@@ -145,6 +149,12 @@ class CodeGenerator:
             fname,
             len(self.subroutine_symbols.category_symbols(SymbolCategory.Argument)),
         )
+        if self.in_constructor:
+            self.writeln(
+                f"push constant {self.class_symbols.count_by_category(SymbolCategory.Field)}"
+            )
+            self.writeln("call Memory.alloc 1")
+            self.writeln("pop pointer 0")
         self._compileSubroutineBody()
 
     def _start_function(self, name, argc):
@@ -241,8 +251,13 @@ class CodeGenerator:
 
     def _compileReturn(self):
         self.expect(Keyword.RETURN.value)
-        if self.current_token["token"] != Symbol.SEMICOLON.value:
+        if self.in_constructor:
+            self.expect(Keyword.THIS.value)
+            self.writeln("push pointer 0")
+        elif self.current_token["token"] != Symbol.SEMICOLON.value:
             self._compileExpression()
+        else:
+            self.writeln("push constant 0")
         self.expect(Symbol.SEMICOLON.value)
         self.writeln("return")
 

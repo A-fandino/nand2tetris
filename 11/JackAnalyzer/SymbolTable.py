@@ -37,7 +37,7 @@ class SymbolTable:
             "index": len(categorySymbols),
             "type": type,
             "category": category,  # Looks reudandant but helps optimizing symbol retrieval
-            "memory_segment": category_to_segment[category],
+            "memory_segment": category_to_segment.get(category),
         }
 
     def get_by_name(self, name: str):

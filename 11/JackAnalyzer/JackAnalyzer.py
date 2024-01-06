@@ -47,7 +47,6 @@ def main():
     for file in input_files:
         tokenizer = JackTokenizer(file)
         tokenizer.compute_tokens()
-        tokenizer.generate_xml_file(get_output_file(file, True))
 
         engine = CodeGenerator(tokenizer, get_output_file(file))
         engine.compile()

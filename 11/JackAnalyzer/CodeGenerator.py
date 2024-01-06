@@ -248,11 +248,21 @@ class CodeGenerator:
     def _compileLet(self):
         self.expect(Keyword.LET.value)
         identifier = self.current_token
-        self.expectIdentifier(indexable=True)
+        self.expectIdentifier()
+        is_indexed = self.optionalIndex()
+        symbol = self.subroutine_symbols.get_by_name(identifier["token"])
+        if is_indexed:
+            self.writeln(f"push {symbol['memory_segment']} {symbol['index']}")
+            self.writeln("add")
         self.expect(Symbol.EQUAL_SIGN.value)
         self._compileExpression()
-        symbol = self.subroutine_symbols.get_by_name(identifier["token"])
-        self.writeln(f"pop {symbol['memory_segment']} {symbol['index']}")
+        if is_indexed:
+            self.writeln("pop temp 0")
+            self.writeln("pop pointer 1")
+            self.writeln("push temp 0")
+            self.writeln("pop that 0")
+        else:
+            self.writeln(f"pop {symbol['memory_segment']} {symbol['index']}")
         self.expect(Symbol.SEMICOLON.value)
 
     def _compileWhile(self):
@@ -330,12 +340,16 @@ class CodeGenerator:
 
         # This could be unified with the doStatement logic
         name = self.current_token["token"]
-        if self.expectIdentifier(mandatory=False, indexable=True):
+        if self.expectIdentifier(mandatory=False):
             is_call = self._expectCall(name, mandatory=False)
+            is_index = self.optionalIndex()
             if not is_call:
                 symbol = self.subroutine_symbols.get_by_name(name)
                 self.writeln(f"push {symbol['memory_segment']} {symbol['index']}")
-            self.optionalIndex()
+            if is_index:
+                self.writeln("add")
+                self.writeln("pop pointer 1")
+                self.writeln("push that 0")
             return
 
         token = self.current_token
@@ -403,17 +417,13 @@ class CodeGenerator:
             self.expectIdentifier(on_find=on_find)
             is_first = False
 
-    def expectIdentifier(
-        self, mandatory=True, indexable=False, on_find: function | None = None
-    ):
+    def expectIdentifier(self, mandatory=True, on_find: function | None = None):
         token = self.current_token
         result = self.expect(None, "identifier", mandatory=mandatory)
         if result is False:
             return False
         if on_find:
             on_find(token)
-        if indexable:
-            self.optionalIndex()
         return True
 
     def optionalIndex(self):

@@ -235,6 +235,7 @@ class CodeGenerator:
         name = self.current_token["token"]
         self.expectIdentifier()
         self._expectCall(name)
+        self.writeln("pop temp 0")
         self.expect(Symbol.SEMICOLON.value)
 
     def _compileLet(self):

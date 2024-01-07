@@ -33,6 +33,7 @@ class Keyboard {
      * F1 - F12 = 141 - 152
      */
     function char keyPressed() {
+        return Memory.peek(24576);
     }
 
     /**								
@@ -41,6 +42,13 @@ class Keyboard {
      * of the pressed key.
      */
     function char readChar() {
+        var char c;
+        //TODO: Display cursor
+        while (keyPressed() == 0) {}
+        let c = Keyboard.keyPressed();
+        while (keyPressed() == c) {}
+        Output.printChar(c);
+        return c;
     }
 
     /**								
@@ -49,6 +57,24 @@ class Keyboard {
      * and returns its value. Also handles user backspaces.
      */
     function String readLine(String message) {
+        var char c;
+        var String s;
+        Output.print(message);
+        let s = "";
+        while (true) {
+            let c = Keyboard.readChar();
+            if (c = String.newLine()) {
+                Output.println();
+                return s;
+            }
+            if (c = String.backspace()) {
+                s.eraseLastChar();
+                Output.backspace();
+            } else {
+                s = s.appendChar(c);
+            }
+        }
+        return s;
     }   
 
     /**								
@@ -58,5 +84,25 @@ class Keyboard {
      * entered text is detected). Also handles user backspaces. 
      */
     function int readInt(String message) {
+        var int i, value;
+        var bool negative, done;
+        var String s;
+
+        let value = 0;
+        let negative = s.charAt(0) = '-';
+        let i = negative;
+        let s = Keyboard.readLine(message);
+        while (i < s.length() & ~done) {
+            if (s.charAt(i) < '0' | s.charAt(i) > '9') {
+                let done = true;
+            } else {
+                let value = value * 10 + s.charAt(i) - '0';
+                i = i + 1;
+            }
+        }
+        if (negative) {
+            return -value;
+        }
+        return value;
     }
 }

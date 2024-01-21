@@ -45,12 +45,35 @@ class Math {
      *  the Jack expressions x/y and divide(x,y) return the same value.
      */
     function int divide(int x, int y) {
-        return 0;
+        var int q;
+        if (y > x) {
+            return 0;
+        }
+        let q = Math.divide(x, y + y);
+        if ((x - (2 * q * y)) < y) {
+            return (2 * q);
+        } else {
+            return (2 * q) + 1;
+        }
     }
 
     /** Returns the integer part of the square root of x. */
     function int sqrt(int x) {
         return 0;
+    }
+
+    function int pow(int base, int power) {
+        var int result;
+        let result = 1;
+
+        while (power > 0) {
+            if (power & 1) { // power is odd
+                let result = result * base;
+            }
+            let power = power / 2;
+            let base = base * base;
+        }
+        return result;
     }
 
     /** Returns the greater number. */

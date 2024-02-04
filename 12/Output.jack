@@ -17,16 +17,21 @@
 class Output {
 
     // Character map for displaying characters
-    static Array charMaps; 
+    static Array charMaps, screen; 
+    static int col, row;
 
     /** Initializes the screen, and locates the cursor at the screen's top-left. */
     function void init() {
+        do Output.initMap();
+        do Output.moveCursor(0, 0);
+        return;
     }
 
     // Initializes the character map array
     function void initMap() {
         var int i;
-    
+
+        let screen = 16384;
         let charMaps = Array.new(127);
         
         // Black square, used for displaying non-printable characters.
@@ -176,28 +181,59 @@ class Output {
     /** Moves the cursor to the j-th column of the i-th row,
      *  and erases the character displayed there. */
     function void moveCursor(int i, int j) {
+        let row = i;
+        let col = j;
+        return;
     }
 
     /** Displays the given character at the cursor location,
      *  and advances the cursor one column forward. */
     function void printChar(char c) {
+        var Array map;
+        var int base, i, address;
+        let map = Output.getMap(c);
+        let address = (row * 32 * 11) + (col/2);
+        while (i < 11) {
+            let screen[address] = map[i];
+            let address = address + 32;
+            let i = i + 1;
+        }
+        return;
     }
 
     /** displays the given string starting at the cursor location,
      *  and advances the cursor appropriately. */
     function void printString(String s) {
+        var int i, length;
+        let length = s.length();
+        while (i < length) {
+            do Output.printChar(s.charAt(i));
+            let i = i + 1;
+        }
+        return;
     }
 
     /** Displays the given integer starting at the cursor location,
      *  and advances the cursor appropriately. */
     function void printInt(int i) {
+        do Output.printChar(48 + i);
+        return;
     }
 
     /** Advances the cursor to the beginning of the next line. */
     function void println() {
+        let col = 0;
+        if (row < 22) {
+            let row = row + 1;
+        }
+        return;
     }
 
     /** Moves the cursor one column back. */
     function void backSpace() {
+        if (col > 0) {
+            let col = col - 1;
+        }
+        return;
     }
 }

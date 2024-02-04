@@ -10,6 +10,7 @@ class Keyboard {
 
     /** Initializes the keyboard. */
     function void init() {
+        return;
     } 
 
     /**
@@ -44,10 +45,10 @@ class Keyboard {
     function char readChar() {
         var char c;
         //TODO: Display cursor
-        while (keyPressed() == 0) {}
+        while (Keyboard.keyPressed() = 0) {}
         let c = Keyboard.keyPressed();
-        while (keyPressed() == c) {}
-        Output.printChar(c);
+        while (Keyboard.keyPressed() = c) {}
+        do Output.printChar(c);
         return c;
     }
 
@@ -59,19 +60,20 @@ class Keyboard {
     function String readLine(String message) {
         var char c;
         var String s;
-        Output.print(message);
-        let s = "";
+        do Output.printString(message);
+        let s = String.new(32);
         while (true) {
             let c = Keyboard.readChar();
             if (c = String.newLine()) {
-                Output.println();
+                do Output.println();
                 return s;
             }
-            if (c = String.backspace()) {
-                s.eraseLastChar();
-                Output.backspace();
+            if (c = String.backSpace()) {
+                if (s.length() > 0) {
+                    do s.eraseLastChar();
+                }
             } else {
-                s = s.appendChar(c);
+                let s = s.appendChar(c);
             }
         }
         return s;
@@ -89,15 +91,17 @@ class Keyboard {
         var String s;
 
         let value = 0;
-        let negative = s.charAt(0) = '-';
-        let i = negative;
         let s = Keyboard.readLine(message);
+        let negative = s.charAt(0) = 45;
+        if (negative) {
+            let i = 1;
+        }
         while (i < s.length() & ~done) {
-            if (s.charAt(i) < '0' | s.charAt(i) > '9') {
+            if (s.charAt(i) < 48 | s.charAt(i) > 57) {
                 let done = true;
             } else {
-                let value = value * 10 + s.charAt(i) - '0';
-                i = i + 1;
+                let value = value * 10 + s.charAt(i) - 48;
+                let i = i + 1;
             }
         }
         if (negative) {

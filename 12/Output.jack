@@ -76,7 +76,7 @@ class Output {
         do Output.create(64,30,51,51,59,59,59,27,3,30,0,0);  // @
         do Output.create(63,30,51,51,24,12,12,0,12,12,0,0);  // ?
 
-        do Output.create(65,0,0,0,0,0,0,0,0,0,0,0);          // A ** TO BE FILLED **
+        do Output.create(65,12,30,51,51,63,51,51,51,51,0,0);          // A ** TO BE FILLED **
         do Output.create(66,31,51,51,51,31,51,51,51,31,0,0); // B
         do Output.create(67,28,54,35,3,3,3,35,54,28,0,0);    // C
         do Output.create(68,15,27,51,51,51,51,51,27,15,0,0); // D
@@ -190,13 +190,26 @@ class Output {
      *  and advances the cursor one column forward. */
     function void printChar(char c) {
         var Array map;
-        var int base, i, address;
+        var int base, i, address, left, right;
         let map = Output.getMap(c);
         let address = (row * 32 * 11) + (col/2);
         while (i < 11) {
-            let screen[address] = map[i];
+            if (col & 1) {
+                let left = map[i];
+                let right = screen[address];
+            } else {
+                let left = screen[address];
+                let right = map[i];
+            }
+            let screen[address] = (left * 256) | (right & 255);
             let address = address + 32;
             let i = i + 1;
+        }
+
+        if (col = 63) {
+            do Output.println();
+        } else {
+            let col = col + 1;
         }
         return;
     }
@@ -216,7 +229,11 @@ class Output {
     /** Displays the given integer starting at the cursor location,
      *  and advances the cursor appropriately. */
     function void printInt(int i) {
-        do Output.printChar(48 + i);
+        var String s;
+        let s = String.new(10);
+        do s.setInt(i);
+        do Output.printString(s);
+        do s.dispose();
         return;
     }
 
@@ -225,6 +242,8 @@ class Output {
         let col = 0;
         if (row < 22) {
             let row = row + 1;
+        } else {
+            let row = 0;
         }
         return;
     }
@@ -233,6 +252,13 @@ class Output {
     function void backSpace() {
         if (col > 0) {
             let col = col - 1;
+            return;
+        } 
+        let col = 63;
+        if (row > 0) {
+            let row = row - 1;
+        } else {
+            let row = 22;
         }
         return;
     }

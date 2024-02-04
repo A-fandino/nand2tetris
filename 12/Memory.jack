@@ -37,7 +37,7 @@ class Memory {
      *  a reference to its base address. */
     function int alloc(int size) {
         var int targetSize;
-        var Array node, oldNode, foundNode, parentNode, foundNodeParent;
+        var Array node, foundNode, parentNode, foundNodeParent;
         let targetSize = size + 2;
         let node = freeList;
         let foundNode = node;
@@ -56,26 +56,25 @@ class Memory {
 
 
         // OLD NODE
-        let oldNode = foundNode + targetSize;
-        let oldNode[next] = foundNode[next];
-        let oldNode[length] = foundNode[length] - targetSize;
+        let node = foundNode + targetSize;
+        let node[next] = foundNode[next];
+        let node[length] = foundNode[length] - targetSize;
 
         // NEXT NODE
-        let node = foundNode;
-        let node[next] = null;
-        let node[length] = size;
+        let foundNode[next] = null;
+        let foundNode[length] = size;
 
-        if (oldNode[length] = 0) {
-            let oldNode = oldNode[next];
+        if (node[length] = 0) {
+            let node = node[next];
         }
 
         if (foundNodeParent = 0) {
-            let freeList = oldNode;
+            let freeList = node;
         } else {
-            let foundNodeParent[next] = oldNode;
+            let foundNodeParent[next] = node;
         }
 
-        return node + 2;
+        return foundNode + 2;
 
     }
 

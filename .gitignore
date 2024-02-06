@@ -9,3 +9,4 @@ Test.vm
 11/JackAnalyzer/*.xml
 11/JackAnalyzer/*.jack
 12/**/*.vm
+12/**/Pong

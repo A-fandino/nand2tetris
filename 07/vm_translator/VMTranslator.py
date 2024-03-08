@@ -13,12 +13,12 @@ args = argparser.parse_args()
 
 
 def main():
-    filename = os.path.basename(args.filepath).split(".")[0]
+    filepath = ".".join(args.filepath.split(".")[:-1])
+    filename = os.path.basename(filepath)
     with open(args.filepath, "r") as f:
         lines = f.read()
     parser = VmParser(lines)
     code = AsmGenerator(filename)
-    # code.init_setup()
     while (line := parser.next_line()) is not None:
         if not parser.is_instruction():
             continue
@@ -29,7 +29,7 @@ def main():
     code.end_setup()
     output = args.output
     if output is None:
-        output = filename + ".asm"
+        output = filepath + ".asm"
     with open(output, "w") as f:
         f.write(code.output)
     print(output)

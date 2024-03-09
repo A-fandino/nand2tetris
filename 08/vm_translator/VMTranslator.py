@@ -9,19 +9,20 @@ from argparse import ArgumentParser
 argparser = ArgumentParser()
 argparser.add_argument("path", help="VM file or directory to translate")
 argparser.add_argument("-o", "--output", help="Output file name")
-argparser.add_argument(
-    "--origin-directory",
-    action="store_true",
-    dest="origin_directory",
-    help="Generates the file in the same directory as the input file if not output file is specified",
-)
+# argparser.add_argument(
+#     "--origin-directory",
+#     action="store_true",
+#     dest="origin_directory",
+#     help="Generates the file in the same directory as the input file if not output file is specified",
+# )
 args = argparser.parse_args()
 
 
 def main():
     code = AsmGenerator()
     source_files = [args.path]
-    if os.path.isdir(args.path):
+    is_dir = os.path.isdir(args.path)
+    if is_dir:
         code.init_setup()  # We only setup when compiling from a directory
         source_files = [
             os.path.join(args.path, f)
@@ -52,8 +53,8 @@ def main():
     output = args.output
     if output is None:
         output = os.path.basename(os.path.normpath(args.path)).split(".")[0] + ".asm"
-        if args.origin_directory:
-            output = os.path.join(os.path.dirname(args.path), output)
+        if is_dir:
+            output = os.path.join(args.path, output)
     with open(output, "w") as f:
         f.write(code.output)
     print(output)

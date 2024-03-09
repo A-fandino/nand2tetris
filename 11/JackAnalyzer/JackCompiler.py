@@ -8,9 +8,9 @@ argparser = ArgumentParser()
 argparser.add_argument("path", help="Jack file or directory to translate")
 # argparser.add_argument("-o", "--output", help="Output file name")
 argparser.add_argument(
-    "--in-origin",
+    "--curr-dir",
     action="store_true",
-    dest="in_origin",
+    dest="curr_dir",
     help="Generates the file in the same directory as the input file if not output file is specified",
 )
 args = argparser.parse_args()
@@ -32,7 +32,7 @@ def get_input_files():
 def get_output_file(file: str, tokenized: bool = False):
     filename, _ = os.path.splitext(os.path.basename(file))
     path = filename
-    if args.in_origin:
+    if not args.curr_dir:
         dirname = os.path.dirname(file)
         path = os.path.join(dirname, filename)
 
@@ -43,6 +43,7 @@ def get_output_file(file: str, tokenized: bool = False):
 
 
 def main():
+    print(args.path)
     input_files = get_input_files()
     for file in input_files:
         tokenizer = JackTokenizer(file)
@@ -51,6 +52,7 @@ def main():
         engine = CodeGenerator(tokenizer, get_output_file(file))
         engine.compile()
         engine.generate_file()
+        print("->", engine.output_file)
 
 
 if __name__ == "__main__":
